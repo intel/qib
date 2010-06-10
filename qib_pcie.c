@@ -124,7 +124,7 @@ int qib_pcie_init(struct pci_dev *pdev, const struct pci_device_id *ent)
 	pci_set_master(pdev);
 #ifdef CONFIG_PCIEAER
 	/* enable basic AER reporting.  Perhaps more later */
-	if (pci_find_aer_capability(pdev)) {
+	if (pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR)) {
 		ret = pci_enable_pcie_error_reporting(pdev);
 		if (ret)
 			qib_early_err(&pdev->dev,
