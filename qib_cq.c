@@ -324,7 +324,7 @@ int qib_destroy_cq(struct ib_cq *ibcq)
 	struct qib_ibdev *dev = to_idev(ibcq->device);
 	struct qib_cq *cq = to_icq(ibcq);
 
-	flush_workqueue(qib_wq);
+	flush_workqueue(qib_cq_wq);
 	spin_lock(&dev->n_cqs_lock);
 	dev->n_cqs_allocated--;
 	spin_unlock(&dev->n_cqs_lock);
