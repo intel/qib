@@ -1,0 +1,29 @@
+2010-06-29 Ira Weiny <weiny2@llnl.gov>
+
+        * Tag 1.5.2-5
+	* Cherry pick the following from QLogic.
+	  [PATCH] clear eager buffer memory for each new process
+	  [PATCH] backport fix for flush_work()
+	  [PATCH] allow PSM to select from multiple port assignment algorithms
+	  [PATCH] Turn off low latency mode in serdes
+        * add new generated qib.spec file
+
+2010-06-26 Ira Weiny <weiny2@llnl.gov>
+
+        * Tag 1.5.2-4
+        * add depmod -a to post in rpm
+
+2010-06-16 Ira Weiny <weiny2@llnl.gov>
+
+        * Tag 1.5.2-3
+        * Set node description to hostname at load time
+
+2010-06-15 Ira Weiny <weiny2@llnl.gov>
+
+        * Tag 1.5.2-2
+        * Cherry pick d506032e6aefbaa16a1f600773a49519d65ad84d
+	  "Revert last patch (Turn off low latency mode in serdes)"
+
+2010-06-14 Ira Weiny <weiny2@llnl.gov>
+        * Tag 1.5.2-1
+

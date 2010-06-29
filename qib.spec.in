@@ -43,3 +43,6 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 /lib/modules/*
 
+%post
+depmod -a
+

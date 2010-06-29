@@ -2299,7 +2299,8 @@ int qib_register_ib_device(struct qib_devdata *dd)
 	ibdev->mmap = qib_mmap;
 	ibdev->dma_ops = &qib_dma_mapping_ops;
 
-	snprintf(ibdev->node_desc, sizeof(ibdev->node_desc), "@");
+	snprintf(ibdev->node_desc, sizeof(ibdev->node_desc),
+		init_utsname()->nodename);
 
 	ret = ib_register_device(ibdev);
 	if (ret)
