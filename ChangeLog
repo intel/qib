@@ -1,3 +1,8 @@
+2010-07-01 Mitko Haralanov <mitko@qlogic.com>
+
+	* Tag 1.5.2-6
+	* [PATCH] Properly clean up on qib_init failure
+
 2010-06-29 Ira Weiny <weiny2@llnl.gov>
 
         * Tag 1.5.2-5
