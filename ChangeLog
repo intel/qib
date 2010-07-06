@@ -1,3 +1,8 @@
+2010-07-01 Ira Weiny <weiny2@llnl.gov>
+
+	* Tag 1.5.2-7
+	* [PATCH] Add diag_counters from mainline tree.
+
 2010-07-01 Mitko Haralanov <mitko@qlogic.com>
 
 	* Tag 1.5.2-6

@@ -678,7 +678,7 @@ struct qib_ibport {
 	u32 n_loop_pkts;
 	u32 n_pkt_drops;
 	u32 n_vl15_dropped;
-	u32 n_timeouts;
+	u32 n_rc_timeouts;
 	u32 n_dmawait;
 	u32 n_unaligned;
 	u32 n_rc_dupreq;

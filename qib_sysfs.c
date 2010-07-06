@@ -264,6 +264,11 @@ static ssize_t qib_portattr_store(struct kobject *kobj,
 	return pattr->store(ppd, buf, len);
 }
 
+static void qib_port_release(struct kobject *kobj)
+{
+	/* nothing to do since memory is freed by qib_free_devdata() */
+}
+
 static struct sysfs_ops qib_port_ops = {
 	.show = qib_portattr_show,
 	.store = qib_portattr_store,
@@ -347,6 +352,78 @@ static struct kobj_type qib_sl2vl_ktype = {
 
 /* End sl2vl */
 
+/* Start diag_counters */
+
+#define QIB_DIAGC_ATTR(N) \
+	static struct qib_diagc_attr qib_diagc_attr_##N = { \
+		.attr = { .name = __stringify(N), .mode = 0444 }, \
+		.counter = offsetof(struct qib_ibport, n_##N) \
+	}
+
+struct qib_diagc_attr {
+	struct attribute attr;
+	size_t counter;
+};
+
+QIB_DIAGC_ATTR(rc_resends);
+QIB_DIAGC_ATTR(rc_acks);
+QIB_DIAGC_ATTR(rc_qacks);
+QIB_DIAGC_ATTR(rc_delayed_comp);
+QIB_DIAGC_ATTR(seq_naks);
+QIB_DIAGC_ATTR(rdma_seq);
+QIB_DIAGC_ATTR(rnr_naks);
+QIB_DIAGC_ATTR(other_naks);
+QIB_DIAGC_ATTR(rc_timeouts);
+QIB_DIAGC_ATTR(loop_pkts);
+QIB_DIAGC_ATTR(pkt_drops);
+QIB_DIAGC_ATTR(dmawait);
+QIB_DIAGC_ATTR(unaligned);
+QIB_DIAGC_ATTR(rc_dupreq);
+QIB_DIAGC_ATTR(rc_seqnak);
+
+static struct attribute *diagc_default_attributes[] = {
+	&qib_diagc_attr_rc_resends.attr,
+	&qib_diagc_attr_rc_acks.attr,
+	&qib_diagc_attr_rc_qacks.attr,
+	&qib_diagc_attr_rc_delayed_comp.attr,
+	&qib_diagc_attr_seq_naks.attr,
+	&qib_diagc_attr_rdma_seq.attr,
+	&qib_diagc_attr_rnr_naks.attr,
+	&qib_diagc_attr_other_naks.attr,
+	&qib_diagc_attr_rc_timeouts.attr,
+	&qib_diagc_attr_loop_pkts.attr,
+	&qib_diagc_attr_pkt_drops.attr,
+	&qib_diagc_attr_dmawait.attr,
+	&qib_diagc_attr_unaligned.attr,
+	&qib_diagc_attr_rc_dupreq.attr,
+	&qib_diagc_attr_rc_seqnak.attr,
+	NULL
+};
+
+static ssize_t diagc_attr_show(struct kobject *kobj, struct attribute *attr,
+			       char *buf)
+{
+	struct qib_diagc_attr *dattr =
+		container_of(attr, struct qib_diagc_attr, attr);
+	struct qib_pportdata *ppd =
+		container_of(kobj, struct qib_pportdata, diagc_kobj);
+	struct qib_ibport *qibp = &ppd->ibport_data;
+
+	return sprintf(buf, "%u\n", *(u32 *)((char *)qibp + dattr->counter));
+}
+
+static struct sysfs_ops qib_diagc_ops = {
+	.show = diagc_attr_show,
+};
+
+static struct kobj_type qib_diagc_ktype = {
+	.release = qib_port_release,
+	.sysfs_ops = &qib_diagc_ops,
+	.default_attrs = diagc_default_attributes
+};
+
+/* End diag_counters */
+
 /* end of per-port file structures and support code */
 
 /*
@@ -411,7 +488,7 @@ static ssize_t show_stats(struct class_device *cdev, char *buf)
 			       "loop pkts   %d\n"
 			       "PKT drops   %d\n",
 			       dd->pport[pidx].port,
-			       ibp->n_timeouts, ibp->n_rc_resends,
+			       ibp->n_rc_timeouts, ibp->n_rc_resends,
 			       ibp->n_rc_qacks, ibp->n_seq_naks,
 			       ibp->n_rdma_seq, ibp->n_rnr_naks,
 			       ibp->n_other_naks, ibp->n_rc_delayed_comp,
@@ -677,8 +754,19 @@ static int create_port_files(struct ib_device *ibdev, u8 port_num,
 	}
 	kobject_uevent(&ppd->sl2vl_kobj, KOBJ_ADD);
 
+	ret = kobject_init_and_add(&ppd->diagc_kobj, &qib_diagc_ktype, kobj,
+				   "diag_counters");
+	if (ret) {
+		qib_dev_err(dd, "Skipping diag_counters sysfs info, "
+			    "(err %d) port %u\n", ret, port_num);
+		goto bail_diagc;
+	}
+	kobject_uevent(&ppd->diagc_kobj, KOBJ_ADD);
+
 	return 0;
 
+bail_diagc:
+	kobject_put(&ppd->sl2vl_kobj);
 bail_sl:
 	kobject_put(&ppd->pport_kobj);
 bail:

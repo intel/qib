@@ -918,7 +918,7 @@ static void rc_timeout(unsigned long arg)
 	spin_lock_irqsave(&qp->s_lock, flags);
 	if (qp->s_flags & QIB_S_TIMER) {
 		ibp = to_iport(qp->ibqp.device, qp->port_num);
-		ibp->n_timeouts++;
+		ibp->n_rc_timeouts++;
 		qp->s_flags &= ~QIB_S_TIMER;
 		del_timer(&qp->s_timer);
 		qib_restart_rc(qp, qp->s_last_psn + 1, 1);
