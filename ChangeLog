@@ -1,3 +1,7 @@
+2010-07-14 Ira Weiny <weiny2@llnl.gov>
+	* Tag 1.5.2-9
+	* [PATCH] ib_qib: Allow writes to the diag_counters to be able to clear them
+
 2010-07-14 Ralph Campbell <ralph.campbell@qlogic.com>
 
 	* Tag 1.5.2-8
