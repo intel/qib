@@ -1,3 +1,8 @@
+2010-07-14 Ralph Campbell <ralph.campbell@qlogic.com>
+
+	* Tag 1.5.2-8
+	* [PATCH] set cfgctxts to number of CPUs by default
+
 2010-07-01 Ira Weiny <weiny2@llnl.gov>
 
 	* Tag 1.5.2-7

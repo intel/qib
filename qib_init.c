@@ -94,7 +94,7 @@ unsigned long *qib_cpulist;
 void qib_set_ctxtcnt(struct qib_devdata *dd)
 {
 	if (!qib_cfgctxts)
-		dd->cfgctxts = dd->ctxtcnt;
+		dd->cfgctxts = dd->first_user_ctxt + num_online_cpus();
 	else if (qib_cfgctxts < dd->num_pports) {
 		dd->cfgctxts = dd->ctxtcnt;
 		qib_dbg("Configured to use too few ctxts (%u); using %u\n",
