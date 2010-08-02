@@ -1,3 +1,8 @@
+2010-08-02 Ralph Campbell <ralph.campbell@qlogic.com>
+	* Tag 1.5.2-10
+	* [PATCH] limit the number of packets processed per interrupt
+	* [PATCH] fix race between qib_error_qp() and receive packet processing
+
 2010-07-14 Ira Weiny <weiny2@llnl.gov>
 	* Tag 1.5.2-9
 	* [PATCH] ib_qib: Allow writes to the diag_counters to be able to clear them
