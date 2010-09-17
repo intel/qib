@@ -1,3 +1,8 @@
+2010 09-17 Mitko Haralanov <mitko@qlogic.com>
+	* Tag 1.5.2-12
+	* [PATCH] ib_qib: handle transitions from ACTIVE_DEFERRED to ACTIVE
+	  better
+
 2010-09-16 Ira Weiny <weiny2@llnl.gov>
 	* Add kernel version to depmod command in rpm to ensure proper depmod
 	  on upgrade.
