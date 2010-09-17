@@ -44,5 +44,5 @@ rm -rf $RPM_BUILD_ROOT
 /lib/modules/*
 
 %post
-depmod -a
+depmod -a %{kver}
 

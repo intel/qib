@@ -1,3 +1,7 @@
+2010-09-16 Ira Weiny <weiny2@llnl.gov>
+	* Add kernel version to depmod command in rpm to ensure proper depmod
+	  on upgrade.
+
 2010-08-02 Ralph Campbell <ralph.campbell@qlogic.com>
 	* Tag 1.5.2-10
 	* [PATCH] limit the number of packets processed per interrupt
