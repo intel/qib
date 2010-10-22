@@ -1,4 +1,8 @@
-2010 09-17 Mitko Haralanov <mitko@qlogic.com>
+2010-10-22 Ralph Campbell <ralph.campbell@qlogic.com>
+	* Tag 1.5.2-13
+	* [PATCH] set port physical state even if other fields are invalid
+
+2010-09-17 Mitko Haralanov <mitko@qlogic.com>
 	* Tag 1.5.2-12
 	* [PATCH] ib_qib: handle transitions from ACTIVE_DEFERRED to ACTIVE
 	  better

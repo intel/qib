@@ -669,8 +669,8 @@ static int subn_set_portinfo(struct ib_smp *smp, struct ib_device *ibdev,
 	lid = be16_to_cpu(pip->lid);
 	/* Must be a valid unicast LID address. */
 	if (lid == 0 || lid >= QIB_MULTICAST_LID_BASE)
-		goto err;
-	if (ppd->lid != lid || ppd->lmc != (pip->mkeyprot_resv_lmc & 7)) {
+		smp->status |= IB_SMP_INVALID_FIELD;
+	else if (ppd->lid != lid || ppd->lmc != (pip->mkeyprot_resv_lmc & 7)) {
 		if (ppd->lid != lid)
 			qib_set_uevent_bits(ppd, _QIB_EVENT_LID_CHANGE_BIT);
 		if (ppd->lmc != (pip->mkeyprot_resv_lmc & 7))
@@ -684,8 +684,8 @@ static int subn_set_portinfo(struct ib_smp *smp, struct ib_device *ibdev,
 	msl = pip->neighbormtu_mastersmsl & 0xF;
 	/* Must be a valid unicast LID address. */
 	if (smlid == 0 || smlid >= QIB_MULTICAST_LID_BASE)
-		goto err;
-	if (smlid != ibp->sm_lid || msl != ibp->sm_sl) {
+		smp->status |= IB_SMP_INVALID_FIELD;
+	else if (smlid != ibp->sm_lid || msl != ibp->sm_sl) {
 		spin_lock_irqsave(&ibp->lock, flags);
 		if (ibp->sm_ah) {
 			if (smlid != ibp->sm_lid)
@@ -708,12 +708,13 @@ static int subn_set_portinfo(struct ib_smp *smp, struct ib_device *ibdev,
 		if (lwe == 0xFF)
 			lwe = ppd->link_width_supported;
 		else if (lwe >= 16 || (lwe & ~ppd->link_width_supported))
-			goto err;
-		if (lwe != ppd->link_width_enabled)
+			smp->status |= IB_SMP_INVALID_FIELD;
+		else if (lwe != ppd->link_width_enabled) {
 			qib_cdbg(INIT, "IB%u:%u linkwidth set from %x to %x\n",
 				 ppd->dd->unit, ppd->port,
 				ppd->link_width_enabled, lwe);
-		set_link_width_enabled(ppd, lwe);
+			set_link_width_enabled(ppd, lwe);
+		}
 	}
 
 	lse = pip->linkspeedactive_enabled & 0xF;
@@ -726,12 +727,13 @@ static int subn_set_portinfo(struct ib_smp *smp, struct ib_device *ibdev,
 		if (lse == 15)
 			lse = ppd->link_speed_supported;
 		else if (lse >= 8 || (lse & ~ppd->link_speed_supported))
-			goto err;
-		if (lse != ppd->link_speed_enabled)
+			smp->status |= IB_SMP_INVALID_FIELD;
+		else if (lse != ppd->link_speed_enabled) {
 			qib_cdbg(INIT, "IB%u:%u speed set from %x to %x\n",
 				 ppd->dd->unit, ppd->port,
 				ppd->link_speed_enabled, lse);
-		set_link_speed_enabled(ppd, lse);
+			set_link_speed_enabled(ppd, lse);
+		}
 	}
 
 	/* Set link down default state. */
@@ -747,7 +749,7 @@ static int subn_set_portinfo(struct ib_smp *smp, struct ib_device *ibdev,
 					IB_LINKINITCMD_POLL);
 		break;
 	default:
-		goto err;
+		smp->status |= IB_SMP_INVALID_FIELD;
 	}
 
 	ibp->mkeyprot = pip->mkeyprot_resv_lmc >> 6;
@@ -757,15 +759,17 @@ static int subn_set_portinfo(struct ib_smp *smp, struct ib_device *ibdev,
 
 	mtu = ib_mtu_enum_to_int((pip->neighbormtu_mastersmsl >> 4) & 0xF);
 	if (mtu == -1)
-		goto err;
-	qib_set_mtu(ppd, mtu);
+		smp->status |= IB_SMP_INVALID_FIELD;
+	else
+		qib_set_mtu(ppd, mtu);
 
 	/* Set operational VLs */
 	vls = (pip->operationalvl_pei_peo_fpi_fpo >> 4) & 0xF;
 	if (vls) {
 		if (vls > ppd->vls_supported)
-			goto err;
-		(void) dd->f_set_ib_cfg(ppd, QIB_IB_CFG_OP_VLS, vls);
+			smp->status |= IB_SMP_INVALID_FIELD;
+		else
+			(void) dd->f_set_ib_cfg(ppd, QIB_IB_CFG_OP_VLS, vls);
 	}
 
 	if (pip->mkey_violations == 0)
@@ -779,10 +783,10 @@ static int subn_set_portinfo(struct ib_smp *smp, struct ib_device *ibdev,
 
 	ore = pip->localphyerrors_overrunerrors;
 	if (set_phyerrthreshold(ppd, (ore >> 4) & 0xF))
-		goto err;
+		smp->status |= IB_SMP_INVALID_FIELD;
 
 	if (set_overrunthreshold(ppd, (ore & 0xF)))
-		goto err;
+		smp->status |= IB_SMP_INVALID_FIELD;
 
 	ibp->subnet_timeout = pip->clientrereg_resv_subnetto & 0x1F;
 
@@ -801,7 +805,7 @@ static int subn_set_portinfo(struct ib_smp *smp, struct ib_device *ibdev,
 	state = pip->linkspeed_portstate & 0xF;
 	lstate = (pip->portphysstate_linkdown >> 4) & 0xF;
 	if (lstate && !(state == IB_PORT_DOWN || state == IB_PORT_NOP))
-		goto err;
+		smp->status |= IB_SMP_INVALID_FIELD;
 
 	/*
 	 * interesting stuff reported elsewhere, so verbose only,
@@ -831,8 +835,10 @@ static int subn_set_portinfo(struct ib_smp *smp, struct ib_device *ibdev,
 			lstate = QIB_IB_LINKDOWN;
 		else if (lstate == 3)
 			lstate = QIB_IB_LINKDOWN_DISABLE;
-		else
-			goto err;
+		else {
+			smp->status |= IB_SMP_INVALID_FIELD;
+			break;
+		}
 		spin_lock_irqsave(&ppd->lflags_lock, flags);
 		ppd->lflags &= ~QIBL_LINKV;
 		spin_unlock_irqrestore(&ppd->lflags_lock, flags);
@@ -854,8 +860,7 @@ static int subn_set_portinfo(struct ib_smp *smp, struct ib_device *ibdev,
 		qib_set_linkstate(ppd, QIB_IB_LINKACTIVE);
 		break;
 	default:
-		/* XXX We have already partially updated our state! */
-		goto err;
+		smp->status |= IB_SMP_INVALID_FIELD;
 	}
 
 	ret = subn_get_portinfo(smp, ibdev, port);
