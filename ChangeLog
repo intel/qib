@@ -1,3 +1,8 @@
+2010-10-26 Avneesh Pant <avneesh.pant@qlogic.com>
+	* Tag 1.5.2-14
+	* [PATCH] Remove WAIT_SEND flags from QP when setting error
+	  state
+
 2010-10-22 Ralph Campbell <ralph.campbell@qlogic.com>
 	* Tag 1.5.2-13
 	* [PATCH] set port physical state even if other fields are invalid
