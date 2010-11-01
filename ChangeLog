@@ -1,3 +1,9 @@
+2010-11-01 Avneesh Pant <avneesh.pant@qlogic.com>
+	* Tag 1.5.2-19
+	* For QLE73xx adapters need to update interrupt mitigation timeout
+	  prior to updating interrupt packet count else receive interrupt may
+	  not trigger on context overlfow.
+
 2010-11-01 Ralph Campbell <ralph.campbell@qlogic.com>
 	* Tag 1.5.2-18
 	* The immediate work for RDMA_WRITE_ONLY_WITH_IMMEDIATE was being

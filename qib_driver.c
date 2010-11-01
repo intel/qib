@@ -516,7 +516,7 @@ move_along:
 		 */
 		lval = l;
 		if (!last && !(i & 0xf)) {
-			dd->f_update_usrhead(rcd, lval, updegr, etail);
+			dd->f_update_usrhead(rcd, lval, updegr, etail, i);
 			updegr = 0;
 		}
 	}
@@ -560,7 +560,7 @@ bail:
 	 * if no packets were processed.
 	 */
 	lval = (u64)rcd->head | dd->rhdrhead_intr_off;
-	dd->f_update_usrhead(rcd, lval, updegr, etail);
+	dd->f_update_usrhead(rcd, lval, updegr, etail, i);
 	return crcs;
 }
 
