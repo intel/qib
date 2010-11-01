@@ -455,8 +455,10 @@ rdma_first:
 		}
 		if (opcode == OP(RDMA_WRITE_ONLY))
 			goto rdma_last;
-		else if (opcode == OP(RDMA_WRITE_ONLY_WITH_IMMEDIATE))
+		if (opcode == OP(RDMA_WRITE_ONLY_WITH_IMMEDIATE)) {
+			wc.ex.imm_data = ohdr->u.rc.imm_data;
 			goto rdma_last_imm;
+		}
 		/* FALLTHROUGH */
 	case OP(RDMA_WRITE_MIDDLE):
 		/* Check for invalid length PMTU or posted rwqe len. */
@@ -469,8 +471,8 @@ rdma_first:
 		break;
 
 	case OP(RDMA_WRITE_LAST_WITH_IMMEDIATE):
-rdma_last_imm:
 		wc.ex.imm_data = ohdr->u.imm_data;
+rdma_last_imm:
 		hdrsize += 4;
 		wc.wc_flags = IB_WC_WITH_IMM;
 
