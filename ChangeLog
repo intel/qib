@@ -1,3 +1,8 @@
+2010-11-01 Avneesh Pant <avneesh.pant@qlogic.com>
+	* Tag 1.5.2-17
+	* Removed processor based send work queue scheduling for improved 
+	  scalability.
+
 2010-11-01 Gary Leshner <gary.leshner@qlogic.com>
 	* Tag 1.5.2-16
 	* Simple krecvq patch to balance QP allocation across contexts. This

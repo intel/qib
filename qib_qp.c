@@ -148,7 +148,7 @@ static int alloc_qpn(struct qib_devdata *dd, struct qib_qpn_table *qpt,
 	dd->verbs_dev.next_ctxt = (dd->verbs_dev.next_ctxt + 1) % dd->first_user_ctxt;
 	if (r >= dd->n_krcv_queues)
 		r %= dd->n_krcv_queues;
-	qpn = qpt->last + 1;
+	qpn = qpt->last + 2;
 	if (qpn >= QPN_MAX)
 		qpn = 2;
 	if (qpt->mask && ((qpn & qpt->mask) >> 1) != r)
@@ -1074,8 +1074,6 @@ struct ib_qp *qib_create_qp(struct ib_pd *ibpd,
 		}
 		qp->ibqp.qp_num = err;
 		qp->port_num = init_attr->port_num;
-		qp->processor_id = smp_processor_id();
-		qp->send_proc_id = smp_processor_id();
 		qib_reset_qp(qp, init_attr->qp_type);
 		break;
 

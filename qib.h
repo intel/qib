@@ -1407,8 +1407,7 @@ extern struct mutex qib_mutex;
 #define qib_early_err(dev, fmt, ...) \
 	do { \
 		qib_log(__QIB_INFO, "EarlyErr: " fmt, ##__VA_ARGS__); \
-		dev_info(dev, KERN_ERR QIB_DRV_NAME ": " fmt, \
-			##__VA_ARGS__); \
+		dev_err(dev, fmt, ##__VA_ARGS__); \
 	} while (0)
 
 #define qib_dev_err(dd, fmt, ...) \
