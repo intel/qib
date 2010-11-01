@@ -144,7 +144,8 @@ static int alloc_qpn(struct qib_devdata *dd, struct qib_qpn_table *qpt,
 		goto bail;
 	}
 
-	r = smp_processor_id();
+	r = dd->verbs_dev.next_ctxt;
+	dd->verbs_dev.next_ctxt = (dd->verbs_dev.next_ctxt + 1) % dd->first_user_ctxt;
 	if (r >= dd->n_krcv_queues)
 		r %= dd->n_krcv_queues;
 	qpn = qpt->last + 1;

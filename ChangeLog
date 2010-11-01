@@ -1,3 +1,8 @@
+2010-11-01 Gary Leshner <gary.leshner@qlogic.com>
+	* Tag 1.5.2-16
+	* Simple krecvq patch to balance QP allocation across contexts. This
+	  is suboptimal and not entirecly correct for QLE72xx adapters.
+
 2010-11-01 Ralph Campbell <ralph.campbell@qlogic.com>
 	* Tag 1.5.2-15
 	* [PATCH] Add in support for rcvhdrcnt, rcvhdrsize and rcvhdrentsize
