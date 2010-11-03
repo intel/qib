@@ -1,3 +1,10 @@
+2010-11-03 Avneesh Pant <avneesh.pant@qlogic.com>
+	* Tag 1.5.2-20
+	* Avoid doing duplicate writes to the receive header queue register
+	  with a zero and non-zero interrupt count. If the context results in 
+	  header queue full between the writes the chip will never generate a
+	  receive available interrupt leading to deadlock.
+
 2010-11-01 Avneesh Pant <avneesh.pant@qlogic.com>
 	* Tag 1.5.2-19
 	* For QLE73xx adapters need to update interrupt mitigation timeout
