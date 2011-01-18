@@ -1,4 +1,8 @@
 2011-01-18 Mitko Haralanov <mitko@qlogic.com>
+	* Tag 1.5.2-34
+	* Un-necessary delayed completions on RC connection
+
+2011-01-18 Mitko Haralanov <mitko@qlogic.com>
 	* Tag 1.5.2-33
 	* Issue pre-emptive NAKs on eager buffer overflow
 
