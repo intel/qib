@@ -1,4 +1,8 @@
 2011-01-18 Mitko Haralanov <mitko@qlogic.com>
+	* Tag 1.5.2-27
+	* fix context allocation with multiple HCAs
+
+2011-01-18 Mitko Haralanov <mitko@qlogic.com>
 	* Tag 1.5.2-26
 	* Multi Florida HCA Hosts panic on reboot
 

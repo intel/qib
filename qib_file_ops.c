@@ -1508,17 +1508,19 @@ static int get_a_ctxt(struct file *fp, const struct qib_user_info *uinfo,
 		/* find device (with ACTIVE ports) with fewest ctxts in use */
 		for (ndev = 0; ndev < devmax; ndev++) {
 			struct qib_devdata *dd = qib_lookup(ndev);
-			unsigned cused = 0, cfree = 0;
+			unsigned cused = 0, cfree = 0, pusable = 0;
 			if (!dd)
 				continue;
 			if (port && port <= dd->num_pports &&
 				usable(dd->pport + port - 1))
-				dusable = 1;
+				pusable = 1;
 			else
 				for (i = 0; i < dd->num_pports; i++)
 					if (usable(dd->pport + i))
-						dusable++;
-			if (!dusable)
+						pusable++;
+			qib_cdbg(PROC, "Found %d usable port(s) on dev %d\n",
+				 pusable, dd->unit);
+			if (!pusable)
 				continue;
 			for (ctxt = dd->first_user_ctxt; ctxt < dd->cfgctxts;
 			     ctxt++)
@@ -1526,12 +1528,14 @@ static int get_a_ctxt(struct file *fp, const struct qib_user_info *uinfo,
 					cused++;
 				else
 					cfree++;
-			if (cfree && cused < inuse) {
+			if (pusable && cfree && cused < inuse) {
 				udd = dd;
 				inuse = cused;
 			}
 		}
 		if (udd) {
+			qib_cdbg(PROC, "Use unit %d, port %d\n",
+				 udd->unit, port);
 			ret = choose_port_ctxt(fp, udd, port, uinfo);
 			goto done;
 		}
