@@ -1,3 +1,7 @@
+2011-01-18 Mitko Haralanov <mitko@qlogic.com>
+	* Tag 1.5.2-24
+	* generate completion callback on errors
+
 2011-01-17 Mitko Haralanov <mitko@qlogic.com>
 	* Tag 1.5.2-23
 	* add thresholds to VendorPortCounters PMA operation
