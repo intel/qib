@@ -1,4 +1,8 @@
 2011-01-18 Mitko Haralanov <mitko@qlogic.com>
+	* Tag 1.5.2-33
+	* Issue pre-emptive NAKs on eager buffer overflow
+
+2011-01-18 Mitko Haralanov <mitko@qlogic.com>
 	* Tag 1.5.2-32
 	* RDMA lkey/rkey validation is inefficient for GPFS
 
