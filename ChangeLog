@@ -1,4 +1,8 @@
 2011-01-18 Mitko Haralanov <mitko@qlogic.com>
+	* Tag 1.5.2-31
+	* change rcv queue/qpn selection
+
+2011-01-18 Mitko Haralanov <mitko@qlogic.com>
 	* Tag 1.5.2-30
 	* Add a few new SERDES tunings
 

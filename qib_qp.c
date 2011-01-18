@@ -53,13 +53,12 @@ static inline unsigned mk_qpn(struct qib_qpn_table *qpt,
 
 static inline unsigned find_next_offset(struct qib_qpn_table *qpt,
 					struct qpn_map *map, unsigned off,
-					unsigned r)
+					unsigned n)
 {
 	if (qpt->mask) {
 		off++;
-		if ((off & qpt->mask) >> 1 != r)
-			off = ((off & qpt->mask) ?
-				(off | qpt->mask) + 1 : off) | (r << 1);
+		if (((off & qpt->mask) >> 1) >= n)
+			off = (off | qpt->mask) + 2;
 	} else
 		off = find_next_zero_bit(map->page, BITS_PER_PAGE, off);
 	return off;
@@ -128,7 +127,6 @@ static int alloc_qpn(struct qib_devdata *dd, struct qib_qpn_table *qpt,
 	u32 i, offset, max_scan, qpn;
 	struct qpn_map *map;
 	u32 ret;
-	int r;
 
 	if (type == IB_QPT_SMI || type == IB_QPT_GSI) {
 		unsigned n;
@@ -144,16 +142,12 @@ static int alloc_qpn(struct qib_devdata *dd, struct qib_qpn_table *qpt,
 		goto bail;
 	}
 
-	r = dd->verbs_dev.next_ctxt;
 	dd->verbs_dev.next_ctxt = (dd->verbs_dev.next_ctxt + 1) % dd->first_user_ctxt;
-	if (r >= dd->n_krcv_queues)
-		r %= dd->n_krcv_queues;
 	qpn = qpt->last + 2;
 	if (qpn >= QPN_MAX)
 		qpn = 2;
-	if (qpt->mask && ((qpn & qpt->mask) >> 1) != r)
-		qpn = ((qpn & qpt->mask) ? (qpn | qpt->mask) + 1 : qpn) |
-			(r << 1);
+	if (qpt->mask && ((qpn & qpt->mask) >> 1) >= dd->n_krcv_queues)
+		qpn = (qpn | qpt->mask) + 2;
 	offset = qpn & BITS_PER_PAGE_MASK;
 	map = &qpt->map[qpn / BITS_PER_PAGE];
 	max_scan = qpt->nmaps - !offset;
@@ -169,7 +163,7 @@ static int alloc_qpn(struct qib_devdata *dd, struct qib_qpn_table *qpt,
 				ret = qpn;
 				goto bail;
 			}
-			offset = find_next_offset(qpt, map, offset, r);
+			offset = find_next_offset(qpt, map, offset, dd->n_krcv_queues);
 			qpn = mk_qpn(qpt, map, offset);
 			/*
 			 * This test differs from alloc_pidmap().
@@ -189,13 +183,13 @@ static int alloc_qpn(struct qib_devdata *dd, struct qib_qpn_table *qpt,
 			if (qpt->nmaps == QPNMAP_ENTRIES)
 				break;
 			map = &qpt->map[qpt->nmaps++];
-			offset = qpt->mask ? (r << 1) : 0;
+			offset = 0;
 		} else if (map < &qpt->map[qpt->nmaps]) {
 			++map;
-			offset = qpt->mask ? (r << 1) : 0;
+			offset = 0;
 		} else {
 			map = &qpt->map[0];
-			offset = qpt->mask ? (r << 1) : 2;
+			offset = 2;
 		}
 		qpn = mk_qpn(qpt, map, offset);
 	}
