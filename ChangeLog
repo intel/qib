@@ -1,4 +1,8 @@
 2011-01-17 Mitko Haralanov <mitko@qlogic.com>
+	* Tag 1.5.2-23
+	* add thresholds to VendorPortCounters PMA operation
+
+2011-01-17 Mitko Haralanov <mitko@qlogic.com>
 	* Tag 1.5.2-22
 	* add support for the new QME7362 card
 
