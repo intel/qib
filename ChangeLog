@@ -1,3 +1,7 @@
+2011-01-17 Mitko Haralanov <mitko@qlogic.com>
+	* Tag 1.5.2-21
+	* fix race between qib_error_qp() and receive packet processing
+
 2010-11-03 Avneesh Pant <avneesh.pant@qlogic.com>
 	* Tag 1.5.2-20
 	* Avoid doing duplicate writes to the receive header queue register
