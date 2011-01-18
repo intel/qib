@@ -2541,6 +2541,14 @@ static int qib_7322_bringup_serdes(struct qib_pportdata *ppd)
 	qib_write_kreg_port(ppd, krp_rcvctrl, ppd->p_rcvctrl);
 	spin_unlock_irqrestore(&dd->cspec->rcvmod_lock, flags);
 
+	/* Hold the link state machine for mezz boards */
+	if (IS_QMH(dd) || IS_QME(dd)) {
+		qib_cdbg(LINKVERB, "IB%u:%u Holding link state machine\n",
+			 dd->unit, ppd->port);
+		qib_set_ib_7322_lstate(ppd, 0,
+				       QLOGIC_IB_IBCC_LINKINITCMD_DISABLE);
+	}
+
 	/* Also enable IBSTATUSCHG interrupt.  */
 	val = qib_read_kreg_port(ppd, krp_errmask);
 	qib_write_kreg_port(ppd, krp_errmask,
@@ -6153,6 +6161,15 @@ static void set_no_qsfp_atten(struct qib_devdata *dd, int change)
 				 ppd->cpspec->h1_val = h1;
 			/* now change the IBC and serdes, overriding generic */
 			init_txdds_table(ppd, 1);
+			/* Re-enable the physical state machine on mezz boards
+			 * now that the correct settings have been set. */
+			if (IS_QMH(dd) || IS_QME(dd)) {
+				qib_cdbg(LINKVERB, "IB%u:%u Re-enable "
+					 "phys state machine\n",
+					 dd->unit, ppd->port);
+				qib_set_ib_7322_lstate(ppd, 0,
+					    QLOGIC_IB_IBCC_LINKINITCMD_SLEEP);
+			}
 			any++;
 		}
 		if (*nxt == '\n')

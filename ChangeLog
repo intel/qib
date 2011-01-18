@@ -1,4 +1,8 @@
 2011-01-18 Mitko Haralanov <mitko@qlogic.com>
+	* Tag 1.5.2-36
+	* Hold link for Tx SERDES settings
+
+2011-01-18 Mitko Haralanov <mitko@qlogic.com>
 	* Tag 1.5.2-35
 	* fix refcount leak in lkey/rkey validation
 
