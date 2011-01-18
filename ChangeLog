@@ -1,4 +1,8 @@
 2011-01-18 Mitko Haralanov <mitko@qlogic.com>
+	* Tag 1.5.2-26
+	* Multi Florida HCA Hosts panic on reboot
+
+2011-01-18 Mitko Haralanov <mitko@qlogic.com>
 	* Tag 1.5.2-25
 	* UD send with immediate Rx completion has wrong size
 
