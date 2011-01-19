@@ -741,7 +741,6 @@ struct qib_ibdev {
 	spinlock_t n_srqs_lock;
 	u32 n_mcast_grps_allocated; /* number of mcast groups allocated */
 	spinlock_t n_mcast_grps_lock;
-	unsigned next_ctxt; /* next ctxt to be used to allocate a qpn */
 };
 
 struct qib_verbs_counters {

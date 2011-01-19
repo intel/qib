@@ -1,3 +1,7 @@
+2011-01-19 Mitko Haralanov <mitko@qlogic.com>
+	* Tag 1.5.2-37
+	* Remove unused field
+
 2011-01-18 Mitko Haralanov <mitko@qlogic.com>
 	* Tag 1.5.2-36
 	* Hold link for Tx SERDES settings

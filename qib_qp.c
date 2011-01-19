@@ -142,7 +142,6 @@ static int alloc_qpn(struct qib_devdata *dd, struct qib_qpn_table *qpt,
 		goto bail;
 	}
 
-	dd->verbs_dev.next_ctxt = (dd->verbs_dev.next_ctxt + 1) % dd->first_user_ctxt;
 	qpn = qpt->last + 2;
 	if (qpn >= QPN_MAX)
 		qpn = 2;
