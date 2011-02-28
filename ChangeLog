@@ -1,3 +1,7 @@
+2011-02-28 Mitko Haralanov <mitko@qlogic.com>
+	* Tag 1.5.2-40
+	* Return correct MAD when setting link width to 255
+
 2011-02-28 Mike Marciniszyn <mike.marciniszyn@qlogic.com>
 	* Tag 1.5.2-39
 	* Prevent double completions after a timeout or RNR error
