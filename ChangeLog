@@ -1,3 +1,7 @@
+2011-02-28 Mike Marciniszyn <mike.marciniszyn@qlogic.com>
+	* Tag 1.5.2-39
+	* Prevent double completions after a timeout or RNR error
+
 2011-02-10 Mike Marciniszyn <mike.marciniszyn@qlogic.com>
 	* Tag 1.5.2-38
 	* Kernel BUG at include/linux/timer.h:82
