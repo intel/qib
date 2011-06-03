@@ -51,8 +51,8 @@
 static int qib_open(struct inode *, struct file *);
 static int qib_close(struct inode *, struct file *);
 static ssize_t qib_write(struct file *, const char __user *, size_t, loff_t *);
-static ssize_t qib_aio_write(struct kiocb *iocb, const struct iovec *iov,
-			     unsigned long dim, loff_t off);
+static ssize_t qib_aio_write(struct kiocb *, const struct iovec *,
+			     unsigned long, loff_t);
 static unsigned int qib_poll(struct file *, struct poll_table_struct *);
 static int qib_mmapf(struct file *, struct vm_area_struct *);
 
@@ -1328,8 +1328,8 @@ static int init_subctxts(struct qib_devdata *dd,
 	}
 
 	rcd->subctxt_rcvegrbuf = vmalloc_user(rcd->rcvegrbuf_chunks *
-					rcd->rcvegrbuf_size *
-					num_subctxts);
+					      rcd->rcvegrbuf_size *
+					      num_subctxts);
 	if (!rcd->subctxt_rcvegrbuf) {
 		ret = -ENOMEM;
 		goto bail_rhdr;
@@ -2427,7 +2427,6 @@ void qib_cdev_cleanup(struct cdev **cdevp, struct device **devp)
 		*cdevp = NULL;
 	}
 }
-
 
 static struct cdev *wildcard_cdev;
 static struct device *wildcard_device;

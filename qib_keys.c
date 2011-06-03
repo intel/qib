@@ -180,7 +180,7 @@ int qib_lkey_ok(struct qib_lkey_table *rkt, struct qib_pd *pd,
 	off += mr->offset;
 	if (mr->page_shift) {
 		/*
-		page sizes are uniform power of 2 so no loop is necessary 
+		page sizes are uniform power of 2 so no loop is necessary
 		entries_spanned_by_off is the number of times the loop below
 		would have executed.
 		*/
@@ -274,7 +274,7 @@ int qib_rkey_ok(struct qib_qp *qp, struct qib_sge *sge,
 	off += mr->offset;
 	if (mr->page_shift) {
 		/*
-		page sizes are uniform power of 2 so no loop is necessary 
+		page sizes are uniform power of 2 so no loop is necessary
 		entries_spanned_by_off is the number of times the loop below
 		would have executed.
 		*/
