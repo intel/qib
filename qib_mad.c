@@ -89,7 +89,7 @@ static void qib_send_trap(struct qib_ibport *ibp, void *data, unsigned len)
 
 	spin_lock_irqsave(&ibp->lock, flags);
 	if (!ibp->sm_ah) {
-		if (ibp->sm_lid != __constant_be16_to_cpu(IB_LID_PERMISSIVE)) {
+		if (ibp->sm_lid != be16_to_cpu(IB_LID_PERMISSIVE)) {
 			struct ib_ah *ah;
 			struct ib_ah_attr attr;
 
@@ -1402,7 +1402,7 @@ static int pma_get_portsamplesresult_ext(struct ib_perf *pmp,
 		status = dd->f_portcntr(ppd, QIBPORTCNTR_PSSTAT);
 		p->sample_status = cpu_to_be16(status);
 		/* 64 bits */
-		p->extended_width = __constant_cpu_to_be32(0x80000000);
+		p->extended_width = cpu_to_be32(0x80000000);
 		if (status == IB_PMA_SAMPLE_STATUS_DONE) {
 			cache_hw_sample_counters(ppd);
 			ppd->cong_stats.counter =
@@ -1459,7 +1459,7 @@ static int pma_get_portcounters(struct ib_perf *pmp,
 		pmp->status |= IB_SMP_INVALID_FIELD;
 
 	if (cntrs.symbol_error_counter > 0xFFFFUL)
-		p->symbol_error_counter = __constant_cpu_to_be16(0xFFFF);
+		p->symbol_error_counter = cpu_to_be16(0xFFFF);
 	else
 		p->symbol_error_counter =
 			cpu_to_be16((u16)cntrs.symbol_error_counter);
@@ -1473,17 +1473,17 @@ static int pma_get_portcounters(struct ib_perf *pmp,
 	else
 		p->link_downed_counter = (u8)cntrs.link_downed_counter;
 	if (cntrs.port_rcv_errors > 0xFFFFUL)
-		p->port_rcv_errors = __constant_cpu_to_be16(0xFFFF);
+		p->port_rcv_errors = cpu_to_be16(0xFFFF);
 	else
 		p->port_rcv_errors =
 			cpu_to_be16((u16) cntrs.port_rcv_errors);
 	if (cntrs.port_rcv_remphys_errors > 0xFFFFUL)
-		p->port_rcv_remphys_errors = __constant_cpu_to_be16(0xFFFF);
+		p->port_rcv_remphys_errors = cpu_to_be16(0xFFFF);
 	else
 		p->port_rcv_remphys_errors =
 			cpu_to_be16((u16)cntrs.port_rcv_remphys_errors);
 	if (cntrs.port_xmit_discards > 0xFFFFUL)
-		p->port_xmit_discards = __constant_cpu_to_be16(0xFFFF);
+		p->port_xmit_discards = cpu_to_be16(0xFFFF);
 	else
 		p->port_xmit_discards =
 			cpu_to_be16((u16)cntrs.port_xmit_discards);
@@ -1494,24 +1494,24 @@ static int pma_get_portcounters(struct ib_perf *pmp,
 	p->lli_ebor_errors = (cntrs.local_link_integrity_errors << 4) |
 		cntrs.excessive_buffer_overrun_errors;
 	if (cntrs.vl15_dropped > 0xFFFFUL)
-		p->vl15_dropped = __constant_cpu_to_be16(0xFFFF);
+		p->vl15_dropped = cpu_to_be16(0xFFFF);
 	else
 		p->vl15_dropped = cpu_to_be16((u16)cntrs.vl15_dropped);
 	if (cntrs.port_xmit_data > 0xFFFFFFFFUL)
-		p->port_xmit_data = __constant_cpu_to_be32(0xFFFFFFFF);
+		p->port_xmit_data = cpu_to_be32(0xFFFFFFFF);
 	else
 		p->port_xmit_data = cpu_to_be32((u32)cntrs.port_xmit_data);
 	if (cntrs.port_rcv_data > 0xFFFFFFFFUL)
-		p->port_rcv_data = __constant_cpu_to_be32(0xFFFFFFFF);
+		p->port_rcv_data = cpu_to_be32(0xFFFFFFFF);
 	else
 		p->port_rcv_data = cpu_to_be32((u32)cntrs.port_rcv_data);
 	if (cntrs.port_xmit_packets > 0xFFFFFFFFUL)
-		p->port_xmit_packets = __constant_cpu_to_be32(0xFFFFFFFF);
+		p->port_xmit_packets = cpu_to_be32(0xFFFFFFFF);
 	else
 		p->port_xmit_packets =
 			cpu_to_be32((u32)cntrs.port_xmit_packets);
 	if (cntrs.port_rcv_packets > 0xFFFFFFFFUL)
-		p->port_rcv_packets = __constant_cpu_to_be32(0xFFFFFFFF);
+		p->port_rcv_packets = cpu_to_be32(0xFFFFFFFF);
 	else
 		p->port_rcv_packets =
 			cpu_to_be32((u32) cntrs.port_rcv_packets);
@@ -1578,7 +1578,7 @@ static int pma_get_portcounters_cong(struct ib_perf *pmp,
 		cpu_to_be16((QIB_XMIT_RATE_PICO << 13) |
 			    (dd->psxmitwait_check_rate &
 			     ~(QIB_XMIT_RATE_PICO << 13)));
-	p->port_adr_events = __constant_cpu_to_be64(0);
+	p->port_adr_events = cpu_to_be64(0);
 	p->port_xmit_wait = cpu_to_be64(xmit_wait_counter);
 	p->port_xmit_data = cpu_to_be64(cntrs.port_xmit_data);
 	p->port_rcv_data = cpu_to_be64(cntrs.port_rcv_data);
@@ -1587,7 +1587,7 @@ static int pma_get_portcounters_cong(struct ib_perf *pmp,
 	p->port_rcv_packets =
 		cpu_to_be64(cntrs.port_rcv_packets);
 	if (cntrs.symbol_error_counter > 0xFFFFUL)
-		p->symbol_error_counter = __constant_cpu_to_be16(0xFFFF);
+		p->symbol_error_counter = cpu_to_be16(0xFFFF);
 	else
 		p->symbol_error_counter =
 			cpu_to_be16(
@@ -1603,18 +1603,18 @@ static int pma_get_portcounters_cong(struct ib_perf *pmp,
 		p->link_downed_counter =
 			(u8)cntrs.link_downed_counter;
 	if (cntrs.port_rcv_errors > 0xFFFFUL)
-		p->port_rcv_errors = __constant_cpu_to_be16(0xFFFF);
+		p->port_rcv_errors = cpu_to_be16(0xFFFF);
 	else
 		p->port_rcv_errors =
 			cpu_to_be16((u16) cntrs.port_rcv_errors);
 	if (cntrs.port_rcv_remphys_errors > 0xFFFFUL)
-		p->port_rcv_remphys_errors = __constant_cpu_to_be16(0xFFFF);
+		p->port_rcv_remphys_errors = cpu_to_be16(0xFFFF);
 	else
 		p->port_rcv_remphys_errors =
 			cpu_to_be16(
 				(u16)cntrs.port_rcv_remphys_errors);
 	if (cntrs.port_xmit_discards > 0xFFFFUL)
-		p->port_xmit_discards = __constant_cpu_to_be16(0xFFFF);
+		p->port_xmit_discards = cpu_to_be16(0xFFFF);
 	else
 		p->port_xmit_discards =
 			cpu_to_be16((u16)cntrs.port_xmit_discards);
@@ -1625,7 +1625,7 @@ static int pma_get_portcounters_cong(struct ib_perf *pmp,
 	p->lli_ebor_errors = (cntrs.local_link_integrity_errors << 4) |
 		cntrs.excessive_buffer_overrun_errors;
 	if (cntrs.vl15_dropped > 0xFFFFUL)
-		p->vl15_dropped = __constant_cpu_to_be16(0xFFFF);
+		p->vl15_dropped = cpu_to_be16(0xFFFF);
 	else
 		p->vl15_dropped = cpu_to_be16((u16)cntrs.vl15_dropped);
 

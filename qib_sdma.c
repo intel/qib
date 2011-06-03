@@ -633,11 +633,11 @@ retry:
 	if (!tail)
 		descqp = &ppd->sdma_descq[ppd->sdma_descq_cnt].qw[0];
 	descqp -= 2;
-	descqp[0] |= __constant_cpu_to_le64(SDMA_DESC_LAST);
+	descqp[0] |= cpu_to_le64(SDMA_DESC_LAST);
 	if (tx->txreq.flags & QIB_SDMA_TXREQ_F_HEADTOHOST)
-		descqp[0] |= __constant_cpu_to_le64(SDMA_DESC_DMA_HEAD);
+		descqp[0] |= cpu_to_le64(SDMA_DESC_DMA_HEAD);
 	if (tx->txreq.flags & QIB_SDMA_TXREQ_F_INTREQ)
-		descqp[0] |= __constant_cpu_to_le64(SDMA_DESC_INTR);
+		descqp[0] |= cpu_to_le64(SDMA_DESC_INTR);
 
 	atomic_inc(&tx->qp->s_dma_busy);
 	tx->txreq.next_descq_idx = tail;

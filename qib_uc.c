@@ -419,7 +419,7 @@ last_imm:
 		/* Signal completion event if the solicited bit is set. */
 		qib_cq_enter(to_icq(qp->ibqp.recv_cq), &wc,
 			     (ohdr->bth[0] &
-				__constant_cpu_to_be32(IB_BTH_SOLICITED)) != 0);
+				cpu_to_be32(IB_BTH_SOLICITED)) != 0);
 		break;
 
 	case OP(RDMA_WRITE_FIRST):

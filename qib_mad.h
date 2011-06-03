@@ -32,10 +32,10 @@
  * SOFTWARE.
  */
 
-#define IB_SMP_UNSUP_VERSION    __constant_cpu_to_be16(0x0004)
-#define IB_SMP_UNSUP_METHOD     __constant_cpu_to_be16(0x0008)
-#define IB_SMP_UNSUP_METH_ATTR  __constant_cpu_to_be16(0x000C)
-#define IB_SMP_INVALID_FIELD    __constant_cpu_to_be16(0x001C)
+#define IB_SMP_UNSUP_VERSION    cpu_to_be16(0x0004)
+#define IB_SMP_UNSUP_METHOD     cpu_to_be16(0x0008)
+#define IB_SMP_UNSUP_METH_ATTR  cpu_to_be16(0x000C)
+#define IB_SMP_INVALID_FIELD    cpu_to_be16(0x001C)
 
 struct ib_node_info {
 	u8 base_version;
@@ -128,22 +128,22 @@ struct ib_mad_notice_attr {
 /*
  * Generic trap/notice producers
  */
-#define IB_NOTICE_PROD_CA		__constant_cpu_to_be16(1)
-#define IB_NOTICE_PROD_SWITCH		__constant_cpu_to_be16(2)
-#define IB_NOTICE_PROD_ROUTER		__constant_cpu_to_be16(3)
-#define IB_NOTICE_PROD_CLASS_MGR	__constant_cpu_to_be16(4)
+#define IB_NOTICE_PROD_CA		cpu_to_be16(1)
+#define IB_NOTICE_PROD_SWITCH		cpu_to_be16(2)
+#define IB_NOTICE_PROD_ROUTER		cpu_to_be16(3)
+#define IB_NOTICE_PROD_CLASS_MGR	cpu_to_be16(4)
 
 /*
  * Generic trap/notice numbers
  */
-#define IB_NOTICE_TRAP_LLI_THRESH	__constant_cpu_to_be16(129)
-#define IB_NOTICE_TRAP_EBO_THRESH	__constant_cpu_to_be16(130)
-#define IB_NOTICE_TRAP_FLOW_UPDATE	__constant_cpu_to_be16(131)
-#define IB_NOTICE_TRAP_CAP_MASK_CHG	__constant_cpu_to_be16(144)
-#define IB_NOTICE_TRAP_SYS_GUID_CHG	__constant_cpu_to_be16(145)
-#define IB_NOTICE_TRAP_BAD_MKEY		__constant_cpu_to_be16(256)
-#define IB_NOTICE_TRAP_BAD_PKEY		__constant_cpu_to_be16(257)
-#define IB_NOTICE_TRAP_BAD_QKEY		__constant_cpu_to_be16(258)
+#define IB_NOTICE_TRAP_LLI_THRESH	cpu_to_be16(129)
+#define IB_NOTICE_TRAP_EBO_THRESH	cpu_to_be16(130)
+#define IB_NOTICE_TRAP_FLOW_UPDATE	cpu_to_be16(131)
+#define IB_NOTICE_TRAP_CAP_MASK_CHG	cpu_to_be16(144)
+#define IB_NOTICE_TRAP_SYS_GUID_CHG	cpu_to_be16(145)
+#define IB_NOTICE_TRAP_BAD_MKEY		cpu_to_be16(256)
+#define IB_NOTICE_TRAP_BAD_PKEY		cpu_to_be16(257)
+#define IB_NOTICE_TRAP_BAD_QKEY		cpu_to_be16(258)
 
 /*
  * Repress trap/notice flags
@@ -183,17 +183,17 @@ struct ib_vl_weight_elem {
 /*
  * PMA class portinfo capability mask bits
  */
-#define IB_PMA_CLASS_CAP_ALLPORTSELECT  __constant_cpu_to_be16(1 << 8)
-#define IB_PMA_CLASS_CAP_EXT_WIDTH      __constant_cpu_to_be16(1 << 9)
-#define IB_PMA_CLASS_CAP_XMIT_WAIT      __constant_cpu_to_be16(1 << 12)
+#define IB_PMA_CLASS_CAP_ALLPORTSELECT  cpu_to_be16(1 << 8)
+#define IB_PMA_CLASS_CAP_EXT_WIDTH      cpu_to_be16(1 << 9)
+#define IB_PMA_CLASS_CAP_XMIT_WAIT      cpu_to_be16(1 << 12)
 
-#define IB_PMA_CLASS_PORT_INFO          __constant_cpu_to_be16(0x0001)
-#define IB_PMA_PORT_SAMPLES_CONTROL     __constant_cpu_to_be16(0x0010)
-#define IB_PMA_PORT_SAMPLES_RESULT      __constant_cpu_to_be16(0x0011)
-#define IB_PMA_PORT_COUNTERS            __constant_cpu_to_be16(0x0012)
-#define IB_PMA_PORT_COUNTERS_EXT        __constant_cpu_to_be16(0x001D)
-#define IB_PMA_PORT_SAMPLES_RESULT_EXT  __constant_cpu_to_be16(0x001E)
-#define IB_PMA_PORT_COUNTERS_CONG       __constant_cpu_to_be16(0xFF00)
+#define IB_PMA_CLASS_PORT_INFO          cpu_to_be16(0x0001)
+#define IB_PMA_PORT_SAMPLES_CONTROL     cpu_to_be16(0x0010)
+#define IB_PMA_PORT_SAMPLES_RESULT      cpu_to_be16(0x0011)
+#define IB_PMA_PORT_COUNTERS            cpu_to_be16(0x0012)
+#define IB_PMA_PORT_COUNTERS_EXT        cpu_to_be16(0x001D)
+#define IB_PMA_PORT_SAMPLES_RESULT_EXT  cpu_to_be16(0x001E)
+#define IB_PMA_PORT_COUNTERS_CONG       cpu_to_be16(0xFF00)
 
 struct ib_perf {
 	u8 base_version;
@@ -316,19 +316,19 @@ struct ib_pma_portcounters_cong {
 /* number of 4nsec cycles equaling 2secs */
 #define QIB_CONG_TIMER_PSINTERVAL               0x1DCD64EC
 
-#define IB_PMA_SEL_SYMBOL_ERROR                 __constant_cpu_to_be16(0x0001)
-#define IB_PMA_SEL_LINK_ERROR_RECOVERY          __constant_cpu_to_be16(0x0002)
-#define IB_PMA_SEL_LINK_DOWNED                  __constant_cpu_to_be16(0x0004)
-#define IB_PMA_SEL_PORT_RCV_ERRORS              __constant_cpu_to_be16(0x0008)
-#define IB_PMA_SEL_PORT_RCV_REMPHYS_ERRORS      __constant_cpu_to_be16(0x0010)
-#define IB_PMA_SEL_PORT_XMIT_DISCARDS           __constant_cpu_to_be16(0x0040)
-#define IB_PMA_SEL_LOCAL_LINK_INTEGRITY_ERRORS  __constant_cpu_to_be16(0x0200)
-#define IB_PMA_SEL_EXCESSIVE_BUFFER_OVERRUNS    __constant_cpu_to_be16(0x0400)
-#define IB_PMA_SEL_PORT_VL15_DROPPED            __constant_cpu_to_be16(0x0800)
-#define IB_PMA_SEL_PORT_XMIT_DATA               __constant_cpu_to_be16(0x1000)
-#define IB_PMA_SEL_PORT_RCV_DATA                __constant_cpu_to_be16(0x2000)
-#define IB_PMA_SEL_PORT_XMIT_PACKETS            __constant_cpu_to_be16(0x4000)
-#define IB_PMA_SEL_PORT_RCV_PACKETS             __constant_cpu_to_be16(0x8000)
+#define IB_PMA_SEL_SYMBOL_ERROR                 cpu_to_be16(0x0001)
+#define IB_PMA_SEL_LINK_ERROR_RECOVERY          cpu_to_be16(0x0002)
+#define IB_PMA_SEL_LINK_DOWNED                  cpu_to_be16(0x0004)
+#define IB_PMA_SEL_PORT_RCV_ERRORS              cpu_to_be16(0x0008)
+#define IB_PMA_SEL_PORT_RCV_REMPHYS_ERRORS      cpu_to_be16(0x0010)
+#define IB_PMA_SEL_PORT_XMIT_DISCARDS           cpu_to_be16(0x0040)
+#define IB_PMA_SEL_LOCAL_LINK_INTEGRITY_ERRORS  cpu_to_be16(0x0200)
+#define IB_PMA_SEL_EXCESSIVE_BUFFER_OVERRUNS    cpu_to_be16(0x0400)
+#define IB_PMA_SEL_PORT_VL15_DROPPED            cpu_to_be16(0x0800)
+#define IB_PMA_SEL_PORT_XMIT_DATA               cpu_to_be16(0x1000)
+#define IB_PMA_SEL_PORT_RCV_DATA                cpu_to_be16(0x2000)
+#define IB_PMA_SEL_PORT_XMIT_PACKETS            cpu_to_be16(0x4000)
+#define IB_PMA_SEL_PORT_RCV_PACKETS             cpu_to_be16(0x8000)
 
 #define IB_PMA_SEL_CONG_ALL                     0x01
 #define IB_PMA_SEL_CONG_PORT_DATA               0x02
@@ -350,14 +350,14 @@ struct ib_pma_portcounters_ext {
 	__be64 port_multicast_rcv_packets;
 } __attribute__ ((packed));
 
-#define IB_PMA_SELX_PORT_XMIT_DATA              __constant_cpu_to_be16(0x0001)
-#define IB_PMA_SELX_PORT_RCV_DATA               __constant_cpu_to_be16(0x0002)
-#define IB_PMA_SELX_PORT_XMIT_PACKETS           __constant_cpu_to_be16(0x0004)
-#define IB_PMA_SELX_PORT_RCV_PACKETS            __constant_cpu_to_be16(0x0008)
-#define IB_PMA_SELX_PORT_UNI_XMIT_PACKETS       __constant_cpu_to_be16(0x0010)
-#define IB_PMA_SELX_PORT_UNI_RCV_PACKETS        __constant_cpu_to_be16(0x0020)
-#define IB_PMA_SELX_PORT_MULTI_XMIT_PACKETS     __constant_cpu_to_be16(0x0040)
-#define IB_PMA_SELX_PORT_MULTI_RCV_PACKETS      __constant_cpu_to_be16(0x0080)
+#define IB_PMA_SELX_PORT_XMIT_DATA              cpu_to_be16(0x0001)
+#define IB_PMA_SELX_PORT_RCV_DATA               cpu_to_be16(0x0002)
+#define IB_PMA_SELX_PORT_XMIT_PACKETS           cpu_to_be16(0x0004)
+#define IB_PMA_SELX_PORT_RCV_PACKETS            cpu_to_be16(0x0008)
+#define IB_PMA_SELX_PORT_UNI_XMIT_PACKETS       cpu_to_be16(0x0010)
+#define IB_PMA_SELX_PORT_UNI_RCV_PACKETS        cpu_to_be16(0x0020)
+#define IB_PMA_SELX_PORT_MULTI_XMIT_PACKETS     cpu_to_be16(0x0040)
+#define IB_PMA_SELX_PORT_MULTI_RCV_PACKETS      cpu_to_be16(0x0080)
 
 /*
  * The PortSamplesControl.CounterMasks field is an array of 3 bit fields
@@ -366,9 +366,9 @@ struct ib_pma_portcounters_ext {
  */
 #define COUNTER_MASK(q, n) (q << ((9 - n) * 3))
 #define COUNTER_MASK0_9 \
-	__constant_cpu_to_be32(COUNTER_MASK(1, 0) | \
-			       COUNTER_MASK(1, 1) | \
-			       COUNTER_MASK(1, 2) | \
-			       COUNTER_MASK(1, 3) | \
-			       COUNTER_MASK(1, 4))
+	cpu_to_be32(COUNTER_MASK(1, 0) | \
+		    COUNTER_MASK(1, 1) | \
+		    COUNTER_MASK(1, 2) | \
+		    COUNTER_MASK(1, 3) | \
+		    COUNTER_MASK(1, 4))
 

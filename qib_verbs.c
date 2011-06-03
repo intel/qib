@@ -1720,7 +1720,7 @@ static int qib_query_port(struct ib_device *ibdev, u8 port,
 	u16 lid = ppd->lid;
 
 	memset(props, 0, sizeof(*props));
-	props->lid = lid ? lid : __constant_be16_to_cpu(IB_LID_PERMISSIVE);
+	props->lid = lid ? lid : be16_to_cpu(IB_LID_PERMISSIVE);
 	props->lmc = ppd->lmc;
 	props->sm_lid = ibp->sm_lid;
 	props->sm_sl = ibp->sm_sl;
@@ -2093,7 +2093,7 @@ static void init_ibport(struct qib_pportdata *ppd)
 	spin_lock_init(&ibp->lock);
 	/* Set the prefix to the default value (see ch. 4.1.1) */
 	ibp->gid_prefix = IB_DEFAULT_GID_PREFIX;
-	ibp->sm_lid = __constant_be16_to_cpu(IB_LID_PERMISSIVE);
+	ibp->sm_lid = be16_to_cpu(IB_LID_PERMISSIVE);
 	ibp->port_cap_flags = IB_PORT_SYS_IMAGE_GUID_SUP |
 		IB_PORT_CLIENT_REG_SUP | IB_PORT_SL_MAP_SUP |
 		IB_PORT_TRAP_SUP | IB_PORT_AUTO_MIGR_SUP |

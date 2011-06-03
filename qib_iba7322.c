@@ -1394,16 +1394,16 @@ static void flush_fifo(struct qib_pportdata *ppd)
 	u64 pbc;
 	const unsigned hdrwords = 7;
 	static struct qib_ib_header ibhdr = {
-		.lrh[0] = __constant_cpu_to_be16(0xF000 | QIB_LRH_BTH),
+		.lrh[0] = cpu_to_be16(0xF000 | QIB_LRH_BTH),
 		.lrh[1] = IB_LID_PERMISSIVE,
-		.lrh[2] = __constant_cpu_to_be16(hdrwords + SIZE_OF_CRC),
+		.lrh[2] = cpu_to_be16(hdrwords + SIZE_OF_CRC),
 		.lrh[3] = IB_LID_PERMISSIVE,
-		.u.oth.bth[0] = __constant_cpu_to_be32(
+		.u.oth.bth[0] = cpu_to_be32(
 			(IB_OPCODE_UD_SEND_ONLY << 24) | QIB_DEFAULT_P_KEY),
-		.u.oth.bth[1] = __constant_cpu_to_be32(0),
-		.u.oth.bth[2] = __constant_cpu_to_be32(0),
-		.u.oth.u.ud.deth[0] = __constant_cpu_to_be32(0),
-		.u.oth.u.ud.deth[1] = __constant_cpu_to_be32(0),
+		.u.oth.bth[1] = cpu_to_be32(0),
+		.u.oth.bth[2] = cpu_to_be32(0),
+		.u.oth.u.ud.deth[0] = cpu_to_be32(0),
+		.u.oth.u.ud.deth[1] = cpu_to_be32(0),
 	};
 
 	/*
@@ -5477,7 +5477,7 @@ static void try_7322_ipg(struct qib_pportdata *ppd)
 		struct ib_ah *ah;
 
 		memset(&attr, 0, sizeof attr);
-		attr.dlid = __constant_be16_to_cpu(IB_LID_PERMISSIVE);
+		attr.dlid = be16_to_cpu(IB_LID_PERMISSIVE);
 		attr.port_num = ppd->port;
 		ah = ib_create_ah(ibp->qp0->ibqp.pd, &attr);
 		if (IS_ERR(ah))
