@@ -2368,11 +2368,11 @@ static dev_t qib_dev;
 
 int qib_cdev_init(int minor, const char *name,
 		  const struct file_operations *fops,
-		  struct cdev **cdevp, struct device **class_devp)
+		  struct cdev **cdevp, struct device **devp)
 {
 	const dev_t dev = MKDEV(MAJOR(qib_dev), minor);
 	struct cdev *cdev;
-	struct device *class_dev = NULL;
+	struct device *device = NULL;
 	int ret;
 
 	cdev = cdev_alloc();
@@ -2396,11 +2396,11 @@ int qib_cdev_init(int minor, const char *name,
 		goto err_cdev;
 	}
 
-	class_dev = device_create(qib_class, NULL, dev, NULL, name);
-	if (!IS_ERR(class_dev))
+	device = device_create(qib_class, NULL, dev, NULL, name);
+	if (!IS_ERR(device))
 		goto done;
-	ret = PTR_ERR(class_dev);
-	class_dev = NULL;
+	ret = PTR_ERR(device);
+	device = NULL;
 	printk(KERN_ERR QIB_DRV_NAME ": Could not create "
 	       "device for minor %d, %s (err %d)\n",
 	       minor, name, -ret);
@@ -2409,7 +2409,7 @@ err_cdev:
 	cdev = NULL;
 done:
 	*cdevp = cdev;
-	*class_devp = class_dev;
+	*devp = device;
 	return ret;
 }
 
@@ -2430,7 +2430,7 @@ void qib_cdev_cleanup(struct cdev **cdevp, struct device **devp)
 
 
 static struct cdev *wildcard_cdev;
-static struct device *wildcard_class_dev;
+static struct device *wildcard_device;
 
 int __init qib_dev_init(void)
 {
@@ -2470,9 +2470,9 @@ static atomic_t user_count = ATOMIC_INIT(0);
 static void qib_user_remove(struct qib_devdata *dd)
 {
 	if (atomic_dec_return(&user_count) == 0)
-		qib_cdev_cleanup(&wildcard_cdev, &wildcard_class_dev);
+		qib_cdev_cleanup(&wildcard_cdev, &wildcard_device);
 
-	qib_cdev_cleanup(&dd->user_cdev, &dd->user_class_dev);
+	qib_cdev_cleanup(&dd->user_cdev, &dd->user_device);
 }
 
 static int qib_user_add(struct qib_devdata *dd)
@@ -2482,14 +2482,14 @@ static int qib_user_add(struct qib_devdata *dd)
 
 	if (atomic_inc_return(&user_count) == 1) {
 		ret = qib_cdev_init(0, "ipath", &qib_file_ops,
-				    &wildcard_cdev, &wildcard_class_dev);
+				    &wildcard_cdev, &wildcard_device);
 		if (ret)
 			goto done;
 	}
 
 	snprintf(name, sizeof(name), "ipath%d", dd->unit);
 	ret = qib_cdev_init(dd->unit + 1, name, &qib_file_ops,
-			    &dd->user_cdev, &dd->user_class_dev);
+			    &dd->user_cdev, &dd->user_device);
 	if (ret)
 		qib_user_remove(dd);
 done:

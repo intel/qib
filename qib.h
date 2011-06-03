@@ -662,8 +662,8 @@ struct qib_devdata {
 	struct pci_dev *pcidev;
 	struct cdev *user_cdev;
 	struct cdev *diag_cdev;
-	struct device *user_class_dev;
-	struct device *diag_class_dev;
+	struct device *user_device;
+	struct device *diag_device;
 
 	/* mem-mapped pointer to base of chip regs */
 	u64 __iomem *kregbase;
@@ -1057,8 +1057,8 @@ int qib_count_active_units(void);
 
 int qib_cdev_init(int minor, const char *name,
 		  const struct file_operations *fops,
-		  struct cdev **cdevp, struct device **class_devp);
-void qib_cdev_cleanup(struct cdev **cdevp, struct device **class_devp);
+		  struct cdev **cdevp, struct device **devp);
+void qib_cdev_cleanup(struct cdev **cdevp, struct device **devp);
 int qib_dev_init(void);
 void qib_dev_cleanup(void);
 

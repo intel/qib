@@ -273,6 +273,7 @@ static struct sysfs_ops qib_port_ops = {
 };
 
 static struct kobj_type qib_port_ktype = {
+	.release = qib_port_release,
 	.sysfs_ops = &qib_port_ops,
 	.default_attrs = port_default_attributes
 };
@@ -344,6 +345,7 @@ static struct sysfs_ops qib_sl2vl_ops = {
 };
 
 static struct kobj_type qib_sl2vl_ktype = {
+	.release = qib_port_release,
 	.sysfs_ops = &qib_sl2vl_ops,
 	.default_attrs = sl2vl_default_attributes
 };
@@ -445,22 +447,22 @@ static struct kobj_type qib_diagc_ktype = {
 
 /*
  * Start of per-unit (or driver, in some cases, but replicated
- * per unit) functions (these get a class_device *)
+ * per unit) functions (these get a device *)
  */
-static ssize_t show_rev(struct device *cdev, struct device_attribute *attr,
+static ssize_t show_rev(struct device *device, struct device_attribute *attr,
 			char *buf)
 {
 	struct qib_ibdev *dev =
-		container_of(cdev, struct qib_ibdev, ibdev.dev);
+		container_of(device, struct qib_ibdev, ibdev.dev);
 
 	return sprintf(buf, "%x\n", dd_from_dev(dev)->minrev);
 }
 
-static ssize_t show_hca(struct device *cdev, struct device_attribute *attr,
+static ssize_t show_hca(struct device *device, struct device_attribute *attr,
 			char *buf)
 {
 	struct qib_ibdev *dev =
-		container_of(cdev, struct qib_ibdev, ibdev.dev);
+		container_of(device, struct qib_ibdev, ibdev.dev);
 	struct qib_devdata *dd = dd_from_dev(dev);
 	int ret;
 
@@ -475,11 +477,11 @@ static const char *qp_type_str[] = {
 	"SMI", "GSI", "RC", "UC", "UD",
 };
 
-static ssize_t show_stats(struct device *cdev,
+static ssize_t show_stats(struct device *device,
 			  struct device_attribute *attr, char *buf)
 {
 	struct qib_ibdev *dev =
-		container_of(cdev, struct qib_ibdev, ibdev.dev);
+		container_of(device, struct qib_ibdev, ibdev.dev);
 	struct qib_devdata *dd = dd_from_dev(dev);
 	unsigned pidx;
 	unsigned i;
@@ -576,18 +578,18 @@ static ssize_t show_stats(struct device *cdev,
 	return len;
 }
 
-static ssize_t show_version(struct device *cdev,
+static ssize_t show_version(struct device *device,
 			    struct device_attribute *attr, char *buf)
 {
 	/* The string printed here is already newline-terminated. */
 	return scnprintf(buf, PAGE_SIZE, "%s", (char *)ib_qib_version);
 }
 
-static ssize_t show_boardversion(struct device *cdev,
+static ssize_t show_boardversion(struct device *device,
 				 struct device_attribute *attr, char *buf)
 {
 	struct qib_ibdev *dev =
-		container_of(cdev, struct qib_ibdev, ibdev.dev);
+		container_of(device, struct qib_ibdev, ibdev.dev);
 	struct qib_devdata *dd = dd_from_dev(dev);
 
 	/* The string printed here is already newline-terminated. */
@@ -595,11 +597,11 @@ static ssize_t show_boardversion(struct device *cdev,
 }
 
 
-static ssize_t show_localbus_info(struct device *cdev,
+static ssize_t show_localbus_info(struct device *device,
 				  struct device_attribute *attr, char *buf)
 {
 	struct qib_ibdev *dev =
-		container_of(cdev, struct qib_ibdev, ibdev.dev);
+		container_of(device, struct qib_ibdev, ibdev.dev);
 	struct qib_devdata *dd = dd_from_dev(dev);
 
 	/* The string printed here is already newline-terminated. */
@@ -607,11 +609,11 @@ static ssize_t show_localbus_info(struct device *cdev,
 }
 
 
-static ssize_t show_nctxts(struct device *cdev,
+static ssize_t show_nctxts(struct device *device,
 			   struct device_attribute *attr, char *buf)
 {
 	struct qib_ibdev *dev =
-		container_of(cdev, struct qib_ibdev, ibdev.dev);
+		container_of(device, struct qib_ibdev, ibdev.dev);
 	struct qib_devdata *dd = dd_from_dev(dev);
 
 	/* Return the number of user ports (contexts) available. */
@@ -619,11 +621,11 @@ static ssize_t show_nctxts(struct device *cdev,
 		dd->first_user_ctxt);
 }
 
-static ssize_t show_serial(struct device *cdev,
+static ssize_t show_serial(struct device *device,
 			   struct device_attribute *attr, char *buf)
 {
 	struct qib_ibdev *dev =
-		container_of(cdev, struct qib_ibdev, ibdev.dev);
+		container_of(device, struct qib_ibdev, ibdev.dev);
 	struct qib_devdata *dd = dd_from_dev(dev);
 
 	buf[sizeof dd->serial] = '\0';
@@ -632,12 +634,12 @@ static ssize_t show_serial(struct device *cdev,
 	return strlen(buf);
 }
 
-static ssize_t store_chip_reset(struct device *cdev,
+static ssize_t store_chip_reset(struct device *device,
 				struct device_attribute *attr, const char *buf,
 				size_t count)
 {
 	struct qib_ibdev *dev =
-		container_of(cdev, struct qib_ibdev, ibdev.dev);
+		container_of(device, struct qib_ibdev, ibdev.dev);
 	struct qib_devdata *dd = dd_from_dev(dev);
 	int ret;
 
@@ -651,11 +653,11 @@ bail:
 	return ret < 0 ? ret : count;
 }
 
-static ssize_t show_logged_errs(struct device *cdev,
+static ssize_t show_logged_errs(struct device *device,
 				struct device_attribute *attr, char *buf)
 {
 	struct qib_ibdev *dev =
-		container_of(cdev, struct qib_ibdev, ibdev.dev);
+		container_of(device, struct qib_ibdev, ibdev.dev);
 	struct qib_devdata *dd = dd_from_dev(dev);
 	int idx, count;
 
@@ -676,11 +678,11 @@ static ssize_t show_logged_errs(struct device *cdev,
 /*
  * Dump tempsense regs. in decimal, to ease shell-scripts.
  */
-static ssize_t show_tempsense(struct device *cdev,
+static ssize_t show_tempsense(struct device *device,
 			      struct device_attribute *attr, char *buf)
 {
 	struct qib_ibdev *dev =
-		container_of(cdev, struct qib_ibdev, ibdev.dev);
+		container_of(device, struct qib_ibdev, ibdev.dev);
 	struct qib_devdata *dd = dd_from_dev(dev);
 	int ret;
 	int idx;

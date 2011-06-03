@@ -140,7 +140,7 @@ static const struct file_operations diag_file_ops = {
 
 static atomic_t diagpkt_count = ATOMIC_INIT(0);
 static struct cdev *diagpkt_cdev;
-static struct device *diagpkt_class_dev;
+static struct device *diagpkt_device;
 
 static ssize_t qib_diagpkt_write(struct file *fp, const char __user *data,
 				 size_t count, loff_t *off);
@@ -158,7 +158,7 @@ int qib_diag_add(struct qib_devdata *dd)
 	if (atomic_inc_return(&diagpkt_count) == 1) {
 		ret = qib_cdev_init(QIB_DIAGPKT_MINOR, "ipath_diagpkt",
 				    &diagpkt_file_ops, &diagpkt_cdev,
-				    &diagpkt_class_dev);
+				    &diagpkt_device);
 		if (ret)
 			goto done;
 	}
@@ -166,7 +166,7 @@ int qib_diag_add(struct qib_devdata *dd)
 	snprintf(name, sizeof(name), "ipath_diag%d", dd->unit);
 	ret = qib_cdev_init(QIB_DIAG_MINOR_BASE + dd->unit, name,
 			    &diag_file_ops, &dd->diag_cdev,
-			    &dd->diag_class_dev);
+			    &dd->diag_device);
 done:
 	return ret;
 }
@@ -178,9 +178,9 @@ void qib_diag_remove(struct qib_devdata *dd)
 	struct qib_diag_client *dc;
 
 	if (atomic_dec_and_test(&diagpkt_count))
-		qib_cdev_cleanup(&diagpkt_cdev, &diagpkt_class_dev);
+		qib_cdev_cleanup(&diagpkt_cdev, &diagpkt_device);
 
-	qib_cdev_cleanup(&dd->diag_cdev, &dd->diag_class_dev);
+	qib_cdev_cleanup(&dd->diag_cdev, &dd->diag_device);
 
 	/*
 	 * Return all diag_clients of this device. There should be none,

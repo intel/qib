@@ -245,7 +245,7 @@ struct qib_evt_file {
 
 struct evt_trace_device {
 	struct cdev *cdev;
-	struct device *class_dev;
+	struct device *device;
 };
 
 static int qib_trace_set_bufsize(const char *val, struct kernel_param *kp);
@@ -1318,7 +1318,7 @@ int __init qib_trace_init(void)
 	}
 
 	ret = qib_cdev_init(QIB_TRACE_MINOR, QIB_TRACE_FILE, &qib_trace_fops,
-			    &evt_dev.cdev, &evt_dev.class_dev);
+			    &evt_dev.cdev, &evt_dev.device);
 	if (ret)
 		goto bail_buf;
 
@@ -1341,7 +1341,7 @@ bail:
 void qib_trace_fini(void)
 {
 	if (qib_trace_buf) {
-		qib_cdev_cleanup(&evt_dev.cdev, &evt_dev.class_dev);
+		qib_cdev_cleanup(&evt_dev.cdev, &evt_dev.device);
 		atomic_notifier_chain_unregister(&panic_notifier_list,
 						 &qibtrace_panic_block);
 		qib_evt_buf_destroy(qib_trace_buf);
