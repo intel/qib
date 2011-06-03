@@ -681,7 +681,6 @@ int qib_modify_qp(struct ib_qp *ibqp, struct ib_qp_attr *attr,
 			spin_unlock_irq(&qp->r_lock);
 			/* Stop the sending work queue and retry timer */
 			cancel_work_sync(&qp->s_work);
-			flush_workqueue(qib_wq);
 			del_timer_sync(&qp->s_timer);
 			wait_event(qp->wait_dma, !atomic_read(&qp->s_dma_busy));
 			if (qp->s_tx) {
