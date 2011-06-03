@@ -45,8 +45,6 @@
 #include "qib.h"
 #include "qib_7220.h"
 
-#include "backport_kobject.h"
-
 static void qib_setup_7220_setextled(struct qib_pportdata *, u32);
 static void qib_7220_handle_hwerrors(struct qib_devdata *, char *, size_t);
 static void sendctrl_7220_mod(struct qib_pportdata *ppd, u32 op);

@@ -31,7 +31,6 @@ ib_qib-y := \
 	qib_tx.o \
 	qib_uc.o \
 	qib_ud.o \
-	qib_wc_pat.o \
 	qib_user_pages.o \
 	qib_user_sdma.o \
 	qib_verbs_mcast.o \
@@ -39,9 +38,11 @@ ib_qib-y := \
 	qib_sd7220.o \
 	qib_sd7220_img.o \
 	qib_iba7322.o \
-	qib_verbs.o \
-	backport_sysfs.o \
-	backport_kobject.o
+	qib_verbs.o
+
+#qib_wc_pat.o
+#backport_sysfs.o
+#backport_kobject.o
 
 # 6120 has no fallback if no MSI interrupts, others can do INTx
 ib_qib-$(CONFIG_PCI_MSI) += qib_iba6120.o

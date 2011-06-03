@@ -662,8 +662,8 @@ struct qib_devdata {
 	struct pci_dev *pcidev;
 	struct cdev *user_cdev;
 	struct cdev *diag_cdev;
-	struct class_device *user_class_dev;
-	struct class_device *diag_class_dev;
+	struct device *user_class_dev;
+	struct device *diag_class_dev;
 
 	/* mem-mapped pointer to base of chip regs */
 	u64 __iomem *kregbase;
@@ -1057,8 +1057,8 @@ int qib_count_active_units(void);
 
 int qib_cdev_init(int minor, const char *name,
 		  const struct file_operations *fops,
-		  struct cdev **cdevp, struct class_device **class_devp);
-void qib_cdev_cleanup(struct cdev **cdevp, struct class_device **class_devp);
+		  struct cdev **cdevp, struct device **class_devp);
+void qib_cdev_cleanup(struct cdev **cdevp, struct device **class_devp);
 int qib_dev_init(void);
 void qib_dev_cleanup(void);
 
@@ -1326,6 +1326,8 @@ extern const char ib_qib_version[];
 int qib_device_create(struct qib_devdata *);
 void qib_device_remove(struct qib_devdata *);
 
+int qib_create_port_files(struct ib_device *ibdev, u8 port_num,
+			  struct kobject *kobj);
 int qib_verbs_register_sysfs(struct qib_devdata *);
 void qib_verbs_unregister_sysfs(struct qib_devdata *);
 /* Hook for sysfs read of QSFP */

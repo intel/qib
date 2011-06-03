@@ -74,40 +74,9 @@ static void qib_vma_close(struct vm_area_struct *vma)
 	kref_put(&ip->ref, qib_release_mmap_info);
 }
 
-/*
- * qib_vma_nopage - handle a VMA page fault.
- */
-static struct page *qib_vma_nopage(struct vm_area_struct *vma,
-				     unsigned long address, int *type)
-{
-	struct qib_mmap_info *ip = vma->vm_private_data;
-	unsigned long offset = address - vma->vm_start;
-	struct page *page = NOPAGE_SIGBUS;
-	void *pageptr;
-
-	if (offset >= ip->size)
-		goto out; /* out of range */
-
-	/*
-	 * Convert the vmalloc address into a struct page.
-	 */
-	pageptr = (void *)(offset + ip->obj);
-	page = vmalloc_to_page(pageptr);
-	if (!page)
-		goto out;
-
-	/* Increment the reference count. */
-	get_page(page);
-	if (type)
-		*type = VM_FAULT_MINOR;
-out:
-	return page;
-}
-
 static struct vm_operations_struct qib_vm_ops = {
 	.open =     qib_vma_open,
 	.close =    qib_vma_close,
-	.nopage =   qib_vma_nopage,
 };
 
 /**

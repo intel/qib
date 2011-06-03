@@ -140,7 +140,7 @@ static const struct file_operations diag_file_ops = {
 
 static atomic_t diagpkt_count = ATOMIC_INIT(0);
 static struct cdev *diagpkt_cdev;
-static struct class_device *diagpkt_class_dev;
+static struct device *diagpkt_class_dev;
 
 static ssize_t qib_diagpkt_write(struct file *fp, const char __user *data,
 				 size_t count, loff_t *off);

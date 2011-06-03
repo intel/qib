@@ -34,8 +34,6 @@
 #include <rdma/ib_umem.h>
 #include <rdma/ib_smi.h>
 
-#include "backport_scatterlist.h"
-
 #include "qib.h"
 
 /* Fast memory region */

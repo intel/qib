@@ -45,8 +45,6 @@
 #include "qib.h"
 #include "qib_user_sdma.h"
 
-#include "backport_kobject.h"
-
 /* minimum size of header */
 #define QIB_USER_SDMA_MIN_HEADER_LENGTH 64
 /* expected size of headers (for dma_pool) */
@@ -209,7 +207,7 @@ static int qib_user_sdma_coalesce(const struct qib_devdata *dd,
 
 	dma_addr = dma_map_page(&dd->pcidev->dev, page, 0, len,
 				DMA_TO_DEVICE);
-	if (dma_mapping_error(dma_addr)) {
+	if (dma_mapping_error(&dd->pcidev->dev, dma_addr)) {
 		ret = -ENOMEM;
 		goto free_unmap;
 	}
@@ -307,7 +305,7 @@ static int qib_user_sdma_pin_pages(const struct qib_devdata *dd,
 				     pages[j], 0, flen, DMA_TO_DEVICE);
 		unsigned long fofs = addr & ~PAGE_MASK;
 
-		if (dma_mapping_error(dma_addr)) {
+		if (dma_mapping_error(&dd->pcidev->dev, dma_addr)) {
 			ret = -ENOMEM;
 			goto done;
 		}
@@ -519,7 +517,7 @@ static int qib_user_sdma_queue_pkts(const struct qib_devdata *dd,
 		if (page) {
 			dma_addr = dma_map_page(&dd->pcidev->dev,
 						page, 0, len, DMA_TO_DEVICE);
-			if (dma_mapping_error(dma_addr)) {
+			if (dma_mapping_error(&dd->pcidev->dev, dma_addr)) {
 				ret = -ENOMEM;
 				goto free_pbc;
 			}

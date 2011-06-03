@@ -38,8 +38,6 @@
 #include "qib.h"
 #include "qib_qsfp.h"
 
-#include "backport_wq.h"
-
 /*
  * QSFP support for ib_qib driver, using "Two Wire Serial Interface" driver
  * in qib_twsi.c

@@ -50,9 +50,6 @@
 #include "qib_7322_regs.h"
 #include "qib_qsfp.h"
 
-#include "backport_wq.h"
-#include "backport_kobject.h"
-
 #include "qib_mad.h"
 
 static void qib_setup_7322_setextled(struct qib_pportdata *, u32);

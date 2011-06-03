@@ -38,7 +38,6 @@
 #include <linux/delay.h>
 #include <linux/idr.h>
 
-#include "qib_wc_pat.h"
 #include "qib.h"
 #include "qib_common.h"
 
@@ -1111,15 +1110,6 @@ static int __init qlogic_ib_init(void)
 		goto bail_trace;
 	}
 
-	if (qib_wc_pat) {
-		if (qib_enable_wc_pat() || !qib_wc_pat_enabled()) {
-			printk(KERN_ERR QIB_DRV_NAME
-			       ": WC PAT unavailable, fall-back to MTRR\n");
-			qib_wc_pat = 0;
-		} else
-			qib_cdbg(INIT, "WC PAT mechanism is enabled\n");
-	}
-
 	ret = pci_register_driver(&qib_driver);
 	if (ret < 0) {
 		printk(KERN_ERR QIB_DRV_NAME
@@ -1133,8 +1123,6 @@ static int __init qlogic_ib_init(void)
 	goto bail; /* all OK */
 
 bail_unit:
-	if (qib_wc_pat)
-		qib_disable_wc_pat();
 	idr_destroy(&qib_unit_table);
 bail_trace:
 	qib_trace_fini();
@@ -1160,11 +1148,6 @@ static void __exit qlogic_ib_cleanup(void)
 			"error %d\n", -ret);
 
 	pci_unregister_driver(&qib_driver);
-
-	if (qib_wc_pat) {
-		qib_disable_wc_pat();
-		qib_dbg("WC PAT mechanism is disabled\n");
-	}
 
 	destroy_workqueue(qib_wq);
 	destroy_workqueue(qib_cq_wq);

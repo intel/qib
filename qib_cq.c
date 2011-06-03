@@ -36,8 +36,6 @@
 
 #include "qib_verbs.h"
 
-#include "backport_wq.h"
-
 /**
  * qib_cq_enter - add a new entry to the completion queue
  * @cq: completion queue
