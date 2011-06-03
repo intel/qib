@@ -12,7 +12,7 @@ BuildRequires: kernel-devel
 %endif
 
 Name: qib
-Version: #VERSION#
+Version: 1.5.2
 Release: test
 Source: qib-%{version}.tgz
 

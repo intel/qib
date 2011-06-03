@@ -12,6 +12,7 @@ clean:
 
 dist: clean
 	mkdir -p /tmp/qib-$(VERSION); \
+	sed -e 's/#VERSION#/'$(VERSION)'/g' qib.spec.in > /tmp/qib-$(VERSION)/qib.spec ; \
 	cp -a * /tmp/qib-$(VERSION); \
 	sed -e 's/#VERSION#/'$(VERSION)'/g' qib.spec.in > qib.spec ; \
 	pushd /tmp; \
