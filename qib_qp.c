@@ -1020,14 +1020,12 @@ struct ib_qp *qib_create_qp(struct ib_pd *ibpd,
 			qp->r_rq.max_sge = init_attr->cap.max_recv_sge;
 			sz = (sizeof(struct ib_sge) * qp->r_rq.max_sge) +
 				sizeof(struct qib_rwqe);
-			qp->r_rq.wq = vmalloc(sizeof(struct qib_rwq) +
+			qp->r_rq.wq = vmalloc_user(sizeof(struct qib_rwq) +
 					      qp->r_rq.size * sz);
 			if (!qp->r_rq.wq) {
 				ret = ERR_PTR(-ENOMEM);
 				goto bail_qp;
 			}
-			memset(qp->r_rq.wq, 0,
-			       sizeof(struct qib_rwq) + qp->r_rq.size * sz);
 		}
 
 		/*

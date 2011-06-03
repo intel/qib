@@ -1313,7 +1313,7 @@ static int init_subctxts(struct qib_devdata *dd,
 		goto bail;
 	}
 
-	rcd->subctxt_uregbase = vmalloc(PAGE_SIZE * num_subctxts);
+	rcd->subctxt_uregbase = vmalloc_user(PAGE_SIZE * num_subctxts);
 	if (!rcd->subctxt_uregbase) {
 		ret = -ENOMEM;
 		goto bail;
@@ -1321,13 +1321,13 @@ static int init_subctxts(struct qib_devdata *dd,
 	/* Note: rcd->rcvhdrq_size isn't initialized yet. */
 	size = ALIGN(dd->rcvhdrcnt * dd->rcvhdrentsize *
 		     sizeof(u32), PAGE_SIZE) * num_subctxts;
-	rcd->subctxt_rcvhdr_base = vmalloc(size);
+	rcd->subctxt_rcvhdr_base = vmalloc_user(size);
 	if (!rcd->subctxt_rcvhdr_base) {
 		ret = -ENOMEM;
 		goto bail_ureg;
 	}
 
-	rcd->subctxt_rcvegrbuf = vmalloc(rcd->rcvegrbuf_chunks *
+	rcd->subctxt_rcvegrbuf = vmalloc_user(rcd->rcvegrbuf_chunks *
 					rcd->rcvegrbuf_size *
 					num_subctxts);
 	if (!rcd->subctxt_rcvegrbuf) {
@@ -1340,11 +1340,6 @@ static int init_subctxts(struct qib_devdata *dd,
 	rcd->active_slaves = 1;
 	rcd->redirect_seq_cnt = 1;
 	set_bit(QIB_CTXT_MASTER_UNINIT, &rcd->flag);
-	memset(rcd->subctxt_uregbase, 0, PAGE_SIZE * num_subctxts);
-	memset(rcd->subctxt_rcvhdr_base, 0, size);
-	memset(rcd->subctxt_rcvegrbuf, 0, rcd->rcvegrbuf_chunks *
-					  rcd->rcvegrbuf_size *
-					  num_subctxts);
 	goto bail;
 
 bail_rhdr:

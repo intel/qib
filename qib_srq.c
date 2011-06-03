@@ -127,12 +127,11 @@ struct ib_srq *qib_create_srq(struct ib_pd *ibpd,
 	srq->rq.max_sge = srq_init_attr->attr.max_sge;
 	sz = sizeof(struct ib_sge) * srq->rq.max_sge +
 		sizeof(struct qib_rwqe);
-	srq->rq.wq = vmalloc(sizeof(struct qib_rwq) + srq->rq.size * sz);
+	srq->rq.wq = vmalloc_user(sizeof(struct qib_rwq) + srq->rq.size * sz);
 	if (!srq->rq.wq) {
 		ret = ERR_PTR(-ENOMEM);
 		goto bail_srq;
 	}
-	memset(srq->rq.wq, 0, sizeof(struct qib_rwq) + srq->rq.size * sz);
 
 	/*
 	 * Return the address of the RWQ as the offset to mmap.
@@ -227,12 +226,11 @@ int qib_modify_srq(struct ib_srq *ibsrq, struct ib_srq_attr *attr,
 		sz = sizeof(struct qib_rwqe) +
 			srq->rq.max_sge * sizeof(struct ib_sge);
 		size = attr->max_wr + 1;
-		wq = vmalloc(sizeof(struct qib_rwq) + size * sz);
+		wq = vmalloc_user(sizeof(struct qib_rwq) + size * sz);
 		if (!wq) {
 			ret = -ENOMEM;
 			goto bail;
 		}
-		memset(wq, 0, sizeof(struct qib_rwq) + size * sz);
 
 		/* Check that we can write the offset to mmap. */
 		if (udata && udata->inlen >= sizeof(__u64)) {

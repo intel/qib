@@ -1420,10 +1420,9 @@ int qib_create_rcvhdrq(struct qib_devdata *dd, struct qib_ctxtdata *rcd)
 		}
 
 		if (rcd->ctxt >= dd->first_user_ctxt) {
-			rcd->user_event_mask = vmalloc(PAGE_SIZE);
+			rcd->user_event_mask = vmalloc_user(PAGE_SIZE);
 			if (!rcd->user_event_mask)
 				goto bail_free_hdrq;
-			memset(rcd->user_event_mask, 0, PAGE_SIZE);
 		}
 
 		if (!(dd->flags & QIB_NODMA_RTAIL)) {

@@ -111,10 +111,10 @@ int qib_mmap(struct ib_ucontext *context, struct vm_area_struct *vma)
 		list_del_init(&ip->pending_mmaps);
 		spin_unlock_irq(&dev->pending_lock);
 
-		ret = 0;
-
+		ret = remap_vmalloc_range(vma, ip->obj, 0);
+		if (ret)
+			goto done;
 		vma->vm_ops = &qib_vm_ops;
-		vma->vm_flags |= VM_RESERVED | VM_DONTEXPAND;
 		vma->vm_private_data = ip;
 		qib_vma_open(vma);
 		goto done;

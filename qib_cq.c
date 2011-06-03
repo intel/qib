@@ -237,12 +237,11 @@ struct ib_cq *qib_create_cq(struct ib_device *ibdev, int entries,
 		sz += sizeof(struct ib_uverbs_wc) * (entries + 1);
 	else
 		sz += sizeof(struct ib_wc) * (entries + 1);
-	wc = vmalloc(sz);
+	wc = vmalloc_user(sz);
 	if (!wc) {
 		ret = ERR_PTR(-ENOMEM);
 		goto bail_cq;
 	}
-	memset(wc, 0, sz);
 
 	/*
 	 * Return the address of the WC as the offset to mmap.
@@ -397,12 +396,11 @@ int qib_resize_cq(struct ib_cq *ibcq, int cqe, struct ib_udata *udata)
 		sz += sizeof(struct ib_uverbs_wc) * (cqe + 1);
 	else
 		sz += sizeof(struct ib_wc) * (cqe + 1);
-	wc = vmalloc(sz);
+	wc = vmalloc_user(sz);
 	if (!wc) {
 		ret = -ENOMEM;
 		goto bail;
 	}
-	memset(wc, 0, sz);
 
 	/* Check that we can write the offset to mmap. */
 	if (udata && udata->outlen >= sizeof(__u64)) {
