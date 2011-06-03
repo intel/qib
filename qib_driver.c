@@ -467,9 +467,11 @@ static u32 qib_rcv_hdrerr(struct qib_ctxtdata *rcd, struct qib_pportdata *ppd,
 						if (list_empty(&qp->rspwait)) {
 							qp->r_flags |=
 								QIB_R_RSP_NAK;
-							atomic_inc(&qp->refcount);
-							list_add_tail(&qp->rspwait,
-								      &rcd->qp_wait_list);
+							atomic_inc(
+							 &qp->refcount);
+							list_add_tail(
+							 &qp->rspwait,
+							 &rcd->qp_wait_list);
 						}
 					} /* Out of sequence NAK */
 				} /* QP Request NAKs */
