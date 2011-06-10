@@ -1,6 +1,11 @@
+2011-06-08 Ira Weiny <weiny2@llnl.gov>
+	* Tag 1.5.3-2
+	* spec file changes
+
 2011-06-08 Mike Marciniszyn <mike.marciniszyn@qlogic.com>
 	* Tag 1.5.3-1
 	* Add port patches for RHEL6 in master branch
+
 2011-02-28 Mitko Haralanov <mitko@qlogic.com>
 	* Tag 1.5.2-41
 	* Set default LE2 value for active cables to 0
