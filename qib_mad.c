@@ -1858,33 +1858,6 @@ static int process_subn(struct ib_device *ibdev, int mad_flags,
 	struct qib_pportdata *ppd = ppd_from_ibp(ibp);
 	int ret;
 
-	if (in_mad->mad_hdr.mgmt_class == IB_MGMT_CLASS_SUBN_DIRECTED_ROUTE &&
-	    in_mad->mad_hdr.method == IB_MGMT_METHOD_SET &&
-	    in_mad->mad_hdr.attr_id == IB_SMP_ATTR_PORT_INFO) {
-		struct ib_smp *ismp = (struct ib_smp *)in_mad;
-		struct ib_port_info *pip = (struct ib_port_info *)ismp->data;
-
-		if (ismp->hop_cnt > 60 && ismp->hop_ptr > 60) {
-			ppd->std_mode_flag = 1;
-			in_mad->mad_hdr.method = IB_MGMT_METHOD_GET;
-		} else if (((pip->portphysstate_linkdown >> 4) & 0xF) == 3) {
-			/* disabled */
-			ppd->std_mode_flag = 0;
-		}
-	} else if (in_mad->mad_hdr.mgmt_class ==
-			IB_MGMT_CLASS_SUBN_DIRECTED_ROUTE &&
-		   in_mad->mad_hdr.method == IB_MGMT_METHOD_GET &&
-		   in_mad->mad_hdr.attr_id == IB_SMP_ATTR_NODE_INFO &&
-		   ((struct ib_smp*)in_mad)->hop_cnt > 60 &&
-		   ((struct ib_smp*)in_mad)->hop_ptr > 60) {
-		ppd->std_mode_flag = 1;
-		in_mad->mad_hdr.attr_id = IB_SMP_ATTR_PORT_INFO;
-	} else if (in_mad->mad_hdr.mgmt_class ==
-			IB_MGMT_CLASS_SUBN_DIRECTED_ROUTE &&
-		   ((struct ib_smp*)in_mad)->dr_dlid == cpu_to_be16(0x61ff)) {
-		ppd->std_mode_flag = 1;
-	}
-
 	*out_mad = *in_mad;
 	if (smp->class_version != 1) {
 		smp->status |= IB_SMP_UNSUP_VERSION;

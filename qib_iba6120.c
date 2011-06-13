@@ -1014,7 +1014,6 @@ static int chk_6120_linkrecovery(struct qib_devdata *dd, u64 ibcs)
 		/* and no more until active again */
 		dd->cspec->lastlinkrecov = 0;
 		qib_set_linkstate(dd->pport, QIB_IB_LINKDOWN);
-		dd->pport->std_mode_flag = 0;
 		ret = 0;
 	}
 	if (ibstate == IB_PORT_ACTIVE)

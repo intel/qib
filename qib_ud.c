@@ -355,8 +355,6 @@ int qib_make_ud_req(struct qib_qp *qp)
 		qp->s_hdr.lrh[3] = cpu_to_be16(lid);
 	} else
 		qp->s_hdr.lrh[3] = IB_LID_PERMISSIVE;
-	if (qp->s_hdr.lrh[1] == IB_LID_PERMISSIVE && ppd->std_mode_flag)
-		qp->s_hdr.lrh[1] = cpu_to_be16(0x61ff);
 	if (wqe->wr.send_flags & IB_SEND_SOLICITED)
 		bth0 |= IB_BTH_SOLICITED;
 	bth0 |= extra_bytes << 20;

@@ -158,7 +158,6 @@ void handle_e_ibstatuschanged(struct qib_pportdata *ppd, u64 ibcs)
 				 QIBL_LINKACTIVE | QIBL_LINKARMED);
 		spin_unlock_irqrestore(&ppd->lflags_lock, flags);
 		*ppd->statusp &= ~QIB_STATUS_IB_READY;
-		ppd->std_mode_flag = 0;
 	}
 
 skip_ibchange:
