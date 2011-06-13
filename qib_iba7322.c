@@ -4418,9 +4418,9 @@ static void qib_update_7322_usrhead(struct qib_ctxtdata *rcd, u64 hd,
 				    u32 updegr, u32 egrhd, u32 npkts)
 {
 	/*
- 	 * Need to write timeout register before updating rcvhdrhead to ensure
- 	 * that the timer is enabled on reception of a packet.
- 	 */
+	 * Need to write timeout register before updating rcvhdrhead to ensure
+	 * that the timer is enabled on reception of a packet.
+	 */
 	if (hd >> IBA7322_HDRHEAD_PKTINT_SHIFT)
 		adjust_rcv_timeout(rcd, npkts);
 	qib_write_ureg(rcd->dd, ur_rcvhdrhead, hd, rcd->ctxt);
@@ -6026,7 +6026,7 @@ static void qsfp_7322_event(struct work_struct *work)
 		u64 now = get_jiffies_64();
 		if (time_after64(now, pwrup))
 			break;
-		msleep(1);
+		msleep(20);
 	}
 	ret = qib_refresh_qsfp_cache(ppd, &qd->cache);
 	/*
@@ -7151,7 +7151,7 @@ static void qib_7322_txchk_change(struct qib_devdata *dd, u32 start,
 		/* make sure we see an updated copy next time around */
 		sendctrl_7322_mod(dd->pport, QIB_SENDCTRL_AVAIL_BLIP);
 		sleeps++;
-		msleep(1);
+		msleep(20);
 	}
 
 	switch (which) {
@@ -8111,13 +8111,13 @@ static int serdes_7322_init_new(struct qib_pportdata *ppd)
 	/*       RX Analog reset */
 	/*       RX Digital reset */
 	ibsd_wr_allchans(ppd, 0, 0, BMASK(15, 13));
-	msleep(1);
+	msleep(20);
 	/*       RX Analog reset */
 	ibsd_wr_allchans(ppd, 0, (1 << 14), BMASK(14, 14));
-	msleep(1);
+	msleep(20);
 	/*       RX Digital reset */
 	ibsd_wr_allchans(ppd, 0, (1 << 13), BMASK(13, 13));
-	msleep(1);
+	msleep(20);
 
 	/* setup LoS params; these are subsystem, so chan == 5 */
 	/* LoS filter threshold_count on, ch 0-3, set to 8 */
@@ -8150,13 +8150,13 @@ static int serdes_7322_init_new(struct qib_pportdata *ppd)
 	ibsd_wr_allchans(ppd, 15, 1, BMASK(0, 0));
 	/*       Enable RX Offset Calibration latch */
 	ibsd_wr_allchans(ppd, 12, (1 << 4), BMASK(4, 4));
-	msleep(1);
+	msleep(20);
 	/*       Start Calibration */
 	ibsd_wr_allchans(ppd, 4, (1 << 10), BMASK(10, 10));
 	tstart = get_jiffies_64();
 	while (chan_done &&
 	       !time_after64(tstart, tstart + msecs_to_jiffies(500))) {
-		msleep(1);
+		msleep(20);
 		for (chan = 0; chan < SERDES_CHANS; ++chan) {
 			rxcaldone = ahb_mod(ppd->dd, IBSD(ppd->hw_pidx),
 					    (chan + (chan >> 1)),
@@ -8184,7 +8184,7 @@ static int serdes_7322_init_new(struct qib_pportdata *ppd)
 
 	/*       Turn off Calibration */
 	ibsd_wr_allchans(ppd, 4, 0, BMASK(10, 10));
-	msleep(1);
+	msleep(20);
 
 	/* BRING RX UP */
 	/*       Set LE2 value (May be overridden in qsfp_7322_event) */
@@ -8226,7 +8226,7 @@ static int serdes_7322_init_new(struct qib_pportdata *ppd)
 	ibsd_wr_allchans(ppd, 13, (0 << 5), (1 << 5));
 	/*       Disable auto adapt for LE1 */
 	ibsd_wr_allchans(ppd, 1, (0 << 15), BMASK(15, 15));
-	msleep(10);
+	msleep(20);
 	/*       Enable AFE Offset Cancel */
 	ibsd_wr_allchans(ppd, 12, (1 << 12), BMASK(12, 12));
 	/*       Enable Baseline Wander Correction */
