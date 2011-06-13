@@ -1097,7 +1097,16 @@ static int __init qlogic_ib_init(void)
 	 * removal.
 	 */
 	qib_wq = create_workqueue("qib");
+	if (!qib_wq) {
+		ret = -ENOMEM;
+		goto bail_trace;
+	}
+
 	qib_cq_wq = create_singlethread_workqueue("qib_cq");
+	if (!qib_cq_wq) {
+		ret = -ENOMEM;
+		goto bail_wq;
+	}
 
 	/*
 	 * These must be called before the driver is registered with
@@ -1107,7 +1116,7 @@ static int __init qlogic_ib_init(void)
 	if (!idr_pre_get(&qib_unit_table, GFP_KERNEL)) {
 		printk(KERN_ERR QIB_DRV_NAME ": idr_pre_get() failed\n");
 		ret = -ENOMEM;
-		goto bail_trace;
+		goto bail_cq_wq;
 	}
 
 	ret = pci_register_driver(&qib_driver);
@@ -1124,6 +1133,10 @@ static int __init qlogic_ib_init(void)
 
 bail_unit:
 	idr_destroy(&qib_unit_table);
+bail_cq_wq:
+	destroy_workqueue(qib_cq_wq);
+bail_wq:
+	destroy_workqueue(qib_wq);
 bail_trace:
 	qib_trace_fini();
 bail_dev:
