@@ -117,9 +117,11 @@ int qib_pcie_init(struct pci_dev *pdev, const struct pci_device_id *ent)
 		ret = pci_set_consistent_dma_mask(pdev, DMA_32BIT_MASK);
 	} else
 		ret = pci_set_consistent_dma_mask(pdev, DMA_64BIT_MASK);
-	if (ret)
+	if (ret) {
 		qib_early_err(&pdev->dev,
 			      "Unable to set DMA consistent mask: %d\n", ret);
+		goto bail;
+	}
 
 	pci_set_master(pdev);
 #ifdef CONFIG_PCIEAER
