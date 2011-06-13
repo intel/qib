@@ -132,6 +132,7 @@ int qib_pcie_init(struct pci_dev *pdev, const struct pci_device_id *ent)
 			qib_early_err(&pdev->dev,
 				      "Unable to enable pcie error reporting"
 				      ": %d\n", ret);
+			ret = 0;
 	} else
 		qib_dbg("AER capability not found! AER reports not enabled\n");
 #endif
