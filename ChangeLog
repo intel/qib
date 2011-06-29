@@ -1,3 +1,13 @@
+2011-06-29 Mike Marciniszyn <mike.marciniszyn@qlogic.com>
+	* Tag 1.5.3-3
+        * IB/qib: Fix M_Key field in SubnGet and SubnGetResp MADs
+        * IB/qib: Code style issues found during kernel.org submission testing
+        * IB/qib: Add return value testing for work queue creation
+        * IB/qib: Allow driver to load if PCIe advanced error reporting fails
+        * IB/qib: clean up properly if pci_set_consistent_dma_mask() fails
+        * Revert "IB/qib: turn off IB latency mode"
+        * IB/qib: remove A0 switch support
+
 2011-06-08 Ira Weiny <weiny2@llnl.gov>
 	* Tag 1.5.3-2
 	* spec file changes
