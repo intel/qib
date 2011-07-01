@@ -12,7 +12,7 @@ BuildRequires: kernel-devel
 %endif
 
 Name: qib
-Version: 1.5.2
+Version: 1.5.3
 Release: test
 Source: qib-%{version}.tgz
 
@@ -22,7 +22,8 @@ License: GPLv2 or BSD
 Group: System Environment/Base
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Url: http://openfabrics.org
-Requires: kernel = %{kver}
+%define arch %(uname -p)
+Requires: kernel = %(echo %{kver} | sed -e 's/\(.*\)\.%{arch}/\1/g')
 
 %description
 QIB provides the driver to QLogic QDR cards.
