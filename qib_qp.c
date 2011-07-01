@@ -157,7 +157,8 @@ static int alloc_qpn(struct qib_devdata *dd, struct qib_qpn_table *qpt,
 				ret = qpn;
 				goto bail;
 			}
-			offset = find_next_offset(qpt, map, offset, dd->n_krcv_queues);
+			offset = find_next_offset(qpt, map, offset,
+				dd->n_krcv_queues);
 			qpn = mk_qpn(qpt, map, offset);
 			/*
 			 * This test differs from alloc_pidmap().
@@ -462,8 +463,8 @@ int qib_error_qp(struct qib_qp *qp, enum ib_wc_status err)
 		qp->s_flags &= ~(QIB_S_TIMER | QIB_S_WAIT_RNR);
 		del_timer(&qp->s_timer);
 	}
-	
-	if (qp->s_flags & QIB_S_ANY_WAIT_SEND) 
+
+	if (qp->s_flags & QIB_S_ANY_WAIT_SEND)
 		qp->s_flags &= ~QIB_S_ANY_WAIT_SEND;
 
 	spin_lock(&dev->pending_lock);

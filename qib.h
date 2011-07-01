@@ -616,7 +616,6 @@ struct qib_pportdata {
 	u16 led_override_timeoff; /* delta to next timer event */
 	u8 led_override_vals[2]; /* Alternates per blink-frame */
 	u8 led_override_phase; /* Just counts, LSB picks from vals[] */
-	u8 std_mode_flag;
 	atomic_t led_override_timer_active;
 	/* Used to flash LEDs in override mode */
 	struct timer_list led_override_timer;
