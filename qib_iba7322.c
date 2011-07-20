@@ -551,8 +551,7 @@ struct qib_chip_specific {
 	int sdma_cpu[2];
 	u64 dca_rcvhdr_ctrl[5]; /* B, C, D, E, F */
 #endif
-	struct msix_entry *msix_entries;
-	void  **msix_arg;
+	struct qib_msix_entry *msix_entries;
 	unsigned long *sendchkenable;
 	unsigned long *sendgrhchk;
 	unsigned long *sendibchk;
@@ -650,24 +649,24 @@ static struct {
 	int lsb;
 	int port; /* 0 if not port-specific, else port # */
 } irq_table[] = {
-	{ QIB_DRV_NAME, qib_7322intr, -1, 0 },
-	{ QIB_DRV_NAME " (buf avail)", qib_7322bufavail,
+	{ "", qib_7322intr, -1, 0 },
+	{ " (buf avail)", qib_7322bufavail,
 		SYM_LSB(IntStatus, SendBufAvail), 0 },
-	{ QIB_DRV_NAME " (sdma 0)", sdma_intr,
+	{ " (sdma 0)", sdma_intr,
 		SYM_LSB(IntStatus, SDmaInt_0), 1 },
-	{ QIB_DRV_NAME " (sdma 1)", sdma_intr,
+	{ " (sdma 1)", sdma_intr,
 		SYM_LSB(IntStatus, SDmaInt_1), 2 },
-	{ QIB_DRV_NAME " (sdmaI 0)", sdma_idle_intr,
+	{ " (sdmaI 0)", sdma_idle_intr,
 		SYM_LSB(IntStatus, SDmaIdleInt_0), 1 },
-	{ QIB_DRV_NAME " (sdmaI 1)", sdma_idle_intr,
+	{ " (sdmaI 1)", sdma_idle_intr,
 		SYM_LSB(IntStatus, SDmaIdleInt_1), 2 },
-	{ QIB_DRV_NAME " (sdmaP 0)", sdma_progress_intr,
+	{ " (sdmaP 0)", sdma_progress_intr,
 		SYM_LSB(IntStatus, SDmaProgressInt_0), 1 },
-	{ QIB_DRV_NAME " (sdmaP 1)", sdma_progress_intr,
+	{ " (sdmaP 1)", sdma_progress_intr,
 		SYM_LSB(IntStatus, SDmaProgressInt_1), 2 },
-	{ QIB_DRV_NAME " (sdmaC 0)", sdma_cleanup_intr,
+	{ " (sdmaC 0)", sdma_cleanup_intr,
 		SYM_LSB(IntStatus, SDmaCleanupDone_0), 1 },
-	{ QIB_DRV_NAME " (sdmaC 1)", sdma_cleanup_intr,
+	{ " (sdmaC 1)", sdma_cleanup_intr,
 		SYM_LSB(IntStatus, SDmaCleanupDone_1), 2 },
 };
 
@@ -2841,8 +2840,8 @@ static void qib_7322_nomsix(struct qib_devdata *dd)
 
 		dd->cspec->num_msix_entries = 0;
 		for (i = 0; i < n; i++)
-			free_irq(dd->cspec->msix_entries[i].vector,
-				 dd->cspec->msix_arg[i]);
+			free_irq(dd->cspec->msix_entries[i].msix.vector,
+			   dd->cspec->msix_entries[i].arg);
 		qib_nomsix(dd);
 	}
 	/* make sure no MSIx interrupts are left pending */
@@ -2881,7 +2880,6 @@ static void qib_setup_7322_cleanup(struct qib_devdata *dd)
 	kfree(dd->cspec->sendgrhchk);
 	kfree(dd->cspec->sendibchk);
 	kfree(dd->cspec->msix_entries);
-	kfree(dd->cspec->msix_arg);
 	for (i = 0; i < dd->num_pports; i++) {
 		unsigned long flags;
 		u32 mask = QSFP_GPIO_MOD_PRS_N |
@@ -3465,11 +3463,13 @@ try_intx:
 	msixnum = 0;
 	for (i = 0; msixnum < dd->cspec->num_msix_entries; i++) {
 		irq_handler_t handler;
-		const char *name;
 		void *arg;
 		u64 val;
 		int lsb, reg, sh;
 
+		dd->cspec->msix_entries[msixnum].
+			name[sizeof(dd->cspec->msix_entries[msixnum].name) - 1]
+			= '\0';
 		if (i < ARRAY_SIZE(irq_table)) {
 			if (irq_table[i].port) {
 				/* skip if for a non-configured port */
@@ -3480,7 +3480,11 @@ try_intx:
 				arg = dd;
 			lsb = irq_table[i].lsb;
 			handler = irq_table[i].handler;
-			name = irq_table[i].name;
+			snprintf(dd->cspec->msix_entries[msixnum].name,
+				sizeof(dd->cspec->msix_entries[msixnum].name)
+				 - 1,
+				QIB_DRV_NAME "%d%s", dd->unit,
+				irq_table[i].name);
 		} else {
 			unsigned ctxt;
 
@@ -3493,23 +3497,30 @@ try_intx:
 				continue;
 			lsb = QIB_I_RCVAVAIL_LSB + ctxt;
 			handler = qib_7322pintr;
-			name = QIB_DRV_NAME " (kctx)";
+			snprintf(dd->cspec->msix_entries[msixnum].name,
+				sizeof(dd->cspec->msix_entries[msixnum].name)
+				 - 1,
+				QIB_DRV_NAME "%d (kctx)", dd->unit);
 		}
-		ret = request_irq(dd->cspec->msix_entries[msixnum].vector,
-				  handler, 0, name, arg);
+		qib_log(__QIB_INFO, "MSIx name: %s\n",
+			dd->cspec->msix_entries[msixnum].name);
+		ret = request_irq(
+			dd->cspec->msix_entries[msixnum].msix.vector,
+			handler, 0, dd->cspec->msix_entries[msixnum].name,
+			arg);
 		if (ret) {
 			/*
 			 * Shouldn't happen since the enable said we could
 			 * have as many as we are trying to setup here.
 			 */
 			qib_dev_err(dd, "Couldn't setup MSIx "
-				    "interrupt (vec=%d, irq=%d): %d\n", msixnum,
-				    dd->cspec->msix_entries[msixnum].vector,
-				    ret);
+				"interrupt (vec=%d, irq=%d): %d\n", msixnum,
+				dd->cspec->msix_entries[msixnum].msix.vector,
+				ret);
 			qib_7322_nomsix(dd);
 			goto try_intx;
 		}
-		dd->cspec->msix_arg[msixnum] = arg;
+		dd->cspec->msix_entries[msixnum].arg = arg;
 		if (lsb >= 0) {
 			reg = lsb / IBA7322_REDIRECT_VEC_PER_REG;
 			sh = (lsb % IBA7322_REDIRECT_VEC_PER_REG) *
@@ -3519,8 +3530,8 @@ try_intx:
 			qib_cdbg(VERBOSE,
 				 "Int %u map to MSIx[%u] vec 0x%x (%s)\n",
 				 lsb, msixnum,
-				 dd->cspec->msix_entries[msixnum].vector,
-				 name);
+				 dd->cspec->msix_entries[msixnum].msix.vector,
+				 dd->cspec->msix_entries[msixnum].name);
 		}
 		val = qib_read_kreg64(dd, 2 * msixnum + 1 +
 			(QIB_7322_MsixTable_OFFS / sizeof(u64)));
@@ -3723,7 +3734,7 @@ static int qib_do_7322_reset(struct qib_devdata *dd)
 	if (msix_entries) {
 		/* restore the MSIx vector address and data if saved above */
 		for (i = 0; i < msix_entries; i++) {
-			dd->cspec->msix_entries[i].entry = i;
+			dd->cspec->msix_entries[i].msix.entry = i;
 			if (!msix_vecsave || !msix_vecsave[2 * i])
 				continue;
 			qib_write_kreg(dd, 2 * i +
@@ -7420,16 +7431,14 @@ struct qib_devdata *qib_init_iba7322_funcs(struct pci_dev *pdev,
 		actual_cnt -= dd->num_pports;
 
 	tabsize = actual_cnt;
-	dd->cspec->msix_entries = kmalloc(tabsize *
-			sizeof(struct msix_entry), GFP_KERNEL);
-	dd->cspec->msix_arg = kmalloc(tabsize *
-			sizeof(void *), GFP_KERNEL);
-	if (!dd->cspec->msix_entries || !dd->cspec->msix_arg) {
+	dd->cspec->msix_entries = kzalloc(tabsize *
+			sizeof(struct qib_msix_entry), GFP_KERNEL);
+	if (!dd->cspec->msix_entries) {
 		qib_dev_err(dd, "No memory for MSIx table\n");
 		tabsize = 0;
 	}
 	for (i = 0; i < tabsize; i++)
-		dd->cspec->msix_entries[i].entry = i;
+		dd->cspec->msix_entries[i].msix.entry = i;
 
 	if (qib_pcie_params(dd, 8, &tabsize, dd->cspec->msix_entries))
 		qib_dev_err(dd, "Failed to setup PCIe or interrupts; "
