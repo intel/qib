@@ -801,8 +801,12 @@ int qib_modify_qp(struct ib_qp *ibqp, struct ib_qp_attr *attr,
 	if (attr_mask & IB_QP_MIN_RNR_TIMER)
 		qp->r_min_rnr_timer = attr->min_rnr_timer;
 
-	if (attr_mask & IB_QP_TIMEOUT)
+	if (attr_mask & IB_QP_TIMEOUT) {
 		qp->timeout = attr->timeout;
+		qp->timeout_jiffies =
+			usecs_to_jiffies((4096UL * (1UL << qp->timeout)) /
+				1000UL);
+	}
 
 	if (attr_mask & IB_QP_QKEY)
 		qp->qkey = attr->qkey;
@@ -1033,6 +1037,9 @@ struct ib_qp *qib_create_qp(struct ib_pd *ibpd,
 			ret = ERR_PTR(-ENOMEM);
 			goto bail_swq;
 		}
+		qp->timeout_jiffies =
+			usecs_to_jiffies((4096UL * (1UL << qp->timeout)) /
+				1000UL);
 		if (init_attr->srq)
 			sz = 0;
 		else {
