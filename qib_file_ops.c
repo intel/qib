@@ -1666,6 +1666,7 @@ done_chk_sdma:
 		struct qib_filedata *fd = fp->private_data;
 		struct qib_ctxtdata *rcd = fd->rcd;
 		struct qib_devdata *dd = rcd->dd;
+		unsigned int weight;
 
 		if (dd->flags & QIB_HAS_SEND_DMA) {
 			fd->pq = qib_user_sdma_queue_create(&dd->pcidev->dev,
@@ -1684,8 +1685,8 @@ done_chk_sdma:
 		 * it just means that sooner or later we don't recommend
 		 * a cpu, and let the scheduler do it's best.
 		 */
-		if (!ret && cpus_weight(current->cpus_allowed) >=
-		   qib_cpulist_count) {
+		weight = cpumask_weight(&current->cpus_allowed);
+		if (!ret && weight >= qib_cpulist_count) {
 			int cpu;
 			cpu = find_first_zero_bit(qib_cpulist,
 						  qib_cpulist_count);
@@ -1701,17 +1702,17 @@ done_chk_sdma:
 					 current->pid, rcd->dd->unit,
 					 rcd->ctxt, subctxt_fp(fp));
 			}
-		} else if (cpus_weight(current->cpus_allowed) == 1 &&
-			test_bit(first_cpu(current->cpus_allowed),
+		} else if (weight == 1 &&
+			test_bit(cpumask_first(&current->cpus_allowed),
 				   qib_cpulist))
 			qib_devinfo(dd->pcidev, "%s PID %u affinity "
 				    "set to cpu %d; already allocated\n",
 				    current->comm, current->pid,
-				    first_cpu(current->cpus_allowed));
+				    cpumask_first(&current->cpus_allowed));
 		else if (!ret)
 			qib_cdbg(PROC, "affinity set for %d cpus of %d, not "
 				 "allocating cpu\n",
-				 cpus_weight(current->cpus_allowed),
+				 weight,
 				 qib_cpulist_count);
 	} else
 		qib_cdbg(PROC, "No contexts available (%u,%u): err %d\n",
