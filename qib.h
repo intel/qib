@@ -1010,6 +1010,8 @@ struct qib_devdata {
 	u8 psxmitwait_supported;
 	/* cycle length of PS* counters in HW (in picoseconds) */
 	u16 psxmitwait_check_rate;
+	/* high volume overflow errors defered to tasklet */
+	struct tasklet_struct error_tasklet;
 };
 
 /* hol_state values */
@@ -1462,6 +1464,7 @@ extern struct mutex qib_mutex;
 struct qib_hwerror_msgs {
 	u64 mask;
 	const char *msg;
+	size_t sz;
 };
 
 #define QLOGIC_IB_HWE_MSG(a, b) { .mask = a, .msg = b }
