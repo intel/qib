@@ -1083,6 +1083,7 @@ static int __init qlogic_ib_init(void)
 	if (qib_debug & __QIB_DBG)
 		printk(KERN_INFO DRIVER_LOAD_MSG "%s", ib_qib_version);
 
+	qib_copy_sge_init();
 	ret = qib_dev_init();
 	if (ret)
 		goto bail;

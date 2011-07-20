@@ -47,5 +47,5 @@ ib_qib-y := \
 # 6120 has no fallback if no MSI interrupts, others can do INTx
 ib_qib-$(CONFIG_PCI_MSI) += qib_iba6120.o
 
-ib_qib-$(CONFIG_X86_64) += qib_wc_x86_64.o
+ib_qib-$(CONFIG_X86_64) += qib_wc_x86_64.o qib_copy_sge_x86_64.o memcpy_cachebypass_x86_64.o
 ib_qib-$(CONFIG_PPC64) += qib_wc_ppc64.o
