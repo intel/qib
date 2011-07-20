@@ -92,7 +92,10 @@ static int serdes_7322_init_new(struct qib_pportdata *);
 /* these are variables for documentation and experimentation purposes */
 static const unsigned rcv_int_timeout = 375;
 static const unsigned rcv_int_count = 16;
-static const unsigned sdma_idle_cnt = 64;
+
+static unsigned sdma_idle_cnt = 64;
+module_param_named(sdma_idle_cnt, sdma_idle_cnt, uint, S_IRUGO);
+MODULE_PARM_DESC(sdma_idle_cnt, "sdma interrupt idle delay (default 64)");
 
 /* Time to stop altering Rx Equalization parameters, after link up. */
 #define RXEQ_DISABLE_MSECS 2500
