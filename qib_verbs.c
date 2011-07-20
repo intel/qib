@@ -1077,21 +1077,23 @@ static void copy_io(u32 __iomem *piobuf, struct qib_sge_state *ss,
 		__raw_writel(last, piobuf);
 }
 
-static struct qib_verbs_txreq *get_txreq(struct qib_ibdev *dev,
-					 struct qib_qp *qp, int *retp)
+static noinline struct qib_verbs_txreq *__get_txreq(struct qib_ibdev *dev,
+					   struct qib_qp *qp, int *retp)
 {
-	struct qib_verbs_txreq *tx;
+	struct qib_verbs_txreq *tx = NULL;
 	unsigned long flags;
 
 	spin_lock_irqsave(&qp->s_lock, flags);
 	spin_lock(&dev->pending_lock);
 
-	if (!list_empty(&dev->txreq_free)) {
+	if (unlikely(!list_empty(&dev->txreq_free))) {
 		struct list_head *l = dev->txreq_free.next;
 
 		list_del(l);
-		tx = list_entry(l, struct qib_verbs_txreq, txreq.list);
+		spin_unlock(&dev->pending_lock);
+		spin_unlock_irqrestore(&qp->s_lock, flags);
 		*retp = 0;
+		tx = list_entry(l, struct qib_verbs_txreq, txreq.list);
 	} else {
 		if (ib_qib_state_ops[qp->state] & QIB_PROCESS_RECV_OK &&
 		    list_empty(&qp->iowait)) {
@@ -1099,14 +1101,34 @@ static struct qib_verbs_txreq *get_txreq(struct qib_ibdev *dev,
 			qp->s_flags |= QIB_S_WAIT_TX;
 			list_add_tail(&qp->iowait, &dev->txwait);
 		}
-		tx = NULL;
 		qp->s_flags &= ~QIB_S_BUSY;
+		spin_unlock(&dev->pending_lock);
+		spin_unlock_irqrestore(&qp->s_lock, flags);
 		*retp = -EBUSY;
 	}
+	return tx;
+}
 
-	spin_unlock(&dev->pending_lock);
-	spin_unlock_irqrestore(&qp->s_lock, flags);
+static struct qib_verbs_txreq *get_txreq(struct qib_ibdev *dev,
+					 struct qib_qp *qp, int *retp)
+{
+	struct qib_verbs_txreq *tx;
+	unsigned long flags;
 
+	spin_lock_irqsave(&dev->pending_lock, flags);
+	/* assume the list non empty */
+	if (!list_empty(&dev->txreq_free)) {
+		struct list_head *l = dev->txreq_free.next;
+
+		list_del(l);
+		spin_unlock_irqrestore(&dev->pending_lock, flags);
+		tx = list_entry(l, struct qib_verbs_txreq, txreq.list);
+		*retp = 0;
+	} else {
+		/* call slow path to get the extra lock */
+		spin_unlock_irqrestore(&dev->pending_lock, flags);
+		tx =  __get_txreq(dev, qp, retp);
+	}
 	return tx;
 }
 
