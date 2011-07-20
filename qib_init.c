@@ -70,6 +70,10 @@ unsigned qib_n_krcv_queues;
 module_param_named(krcvqs, qib_n_krcv_queues, uint, S_IRUGO);
 MODULE_PARM_DESC(krcvqs, "number of kernel receive queues per IB port");
 
+unsigned qib_numa_aware;
+module_param_named(numa_aware, qib_numa_aware, uint, S_IRUGO);
+MODULE_PARM_DESC(numa_aware, "Use NUMA aware allocation");
+
 /*
  * qib_wc_pat parameter:
  *      0 is WC via MTRR
@@ -134,12 +138,20 @@ int qib_create_ctxts(struct qib_devdata *dd)
 	for (i = 0; i < dd->first_user_ctxt; ++i) {
 		struct qib_pportdata *ppd;
 		struct qib_ctxtdata *rcd;
+		int node_id;
 
 		if (dd->skip_kctxt_mask & (1 << i))
 			continue;
 
 		ppd = dd->pport + (i % dd->num_pports);
-		rcd = qib_create_ctxtdata(ppd, i);
+
+		if (qib_numa_aware) {
+			node_id = pcibus_to_node(dd->pcidev->bus);
+			if (node_id == -1)
+				node_id = numa_node_id();
+		} else
+			node_id = numa_node_id();
+		rcd = qib_create_ctxtdata(ppd, i, node_id);
 		if (!rcd) {
 			qib_dev_err(dd, "Unable to allocate ctxtdata"
 				    " for Kernel ctxt, failing\n");
@@ -157,14 +169,16 @@ done:
 /*
  * Common code for user and kernel context setup.
  */
-struct qib_ctxtdata *qib_create_ctxtdata(struct qib_pportdata *ppd, u32 ctxt)
+struct qib_ctxtdata *qib_create_ctxtdata(struct qib_pportdata *ppd, u32 ctxt,
+	int node_id)
 {
 	struct qib_devdata *dd = ppd->dd;
 	struct qib_ctxtdata *rcd;
 
-	rcd = kzalloc(sizeof(*rcd), GFP_KERNEL);
+	rcd = kzalloc_node(sizeof(*rcd), GFP_KERNEL, node_id);
 	if (rcd) {
 		INIT_LIST_HEAD(&rcd->qp_wait_list);
+		rcd->node_id = node_id;
 		rcd->ppd = ppd;
 		rcd->dd = dd;
 		rcd->cnt = 1;
@@ -1416,6 +1430,7 @@ static void __devexit qib_remove_one(struct pci_dev *pdev)
 int qib_create_rcvhdrq(struct qib_devdata *dd, struct qib_ctxtdata *rcd)
 {
 	unsigned amt;
+	int old_node_id;
 
 	if (!rcd->rcvhdrq) {
 		dma_addr_t phys_hdrqtail;
@@ -1425,9 +1440,13 @@ int qib_create_rcvhdrq(struct qib_devdata *dd, struct qib_ctxtdata *rcd)
 			    sizeof(u32), PAGE_SIZE);
 		gfp_flags = (rcd->ctxt >= dd->first_user_ctxt) ?
 			GFP_USER : GFP_KERNEL;
+
+		old_node_id = dev_to_node(&dd->pcidev->dev);
+		set_dev_node(&dd->pcidev->dev, rcd->node_id);
 		rcd->rcvhdrq = dma_alloc_coherent(
 			&dd->pcidev->dev, amt, &rcd->rcvhdrq_phys,
 			gfp_flags | __GFP_COMP);
+		set_dev_node(&dd->pcidev->dev, old_node_id);
 
 		if (!rcd->rcvhdrq) {
 			qib_dev_err(dd, "attempt to allocate %d bytes "
@@ -1443,9 +1462,11 @@ int qib_create_rcvhdrq(struct qib_devdata *dd, struct qib_ctxtdata *rcd)
 		}
 
 		if (!(dd->flags & QIB_NODMA_RTAIL)) {
+			set_dev_node(&dd->pcidev->dev, rcd->node_id);
 			rcd->rcvhdrtail_kvaddr = dma_alloc_coherent(
 				&dd->pcidev->dev, PAGE_SIZE, &phys_hdrqtail,
 				gfp_flags);
+			set_dev_node(&dd->pcidev->dev, old_node_id);
 			if (!rcd->rcvhdrtail_kvaddr)
 				goto bail_free;
 			rcd->rcvhdrqtailaddr_phys = phys_hdrqtail;
@@ -1504,6 +1525,7 @@ int qib_setup_eagerbufs(struct qib_ctxtdata *rcd)
 	unsigned e, egrcnt, egrperchunk, chunk, egrsize, egroff;
 	size_t size;
 	gfp_t gfp_flags;
+	int old_dev_node;
 
 	/*
 	 * GFP_USER, but without GFP_FS, so buffer cache can be
@@ -1525,25 +1547,29 @@ int qib_setup_eagerbufs(struct qib_ctxtdata *rcd)
 	size = rcd->rcvegrbuf_size;
 	if (!rcd->rcvegrbuf) {
 		rcd->rcvegrbuf =
-			kzalloc(chunk * sizeof(rcd->rcvegrbuf[0]),
-				GFP_KERNEL);
+			kzalloc_node(chunk * sizeof(rcd->rcvegrbuf[0]),
+				GFP_KERNEL, rcd->node_id);
 		if (!rcd->rcvegrbuf)
 			goto bail;
 	}
 	if (!rcd->rcvegrbuf_phys) {
 		rcd->rcvegrbuf_phys =
-			kmalloc(chunk * sizeof(rcd->rcvegrbuf_phys[0]),
-				GFP_KERNEL);
+			kmalloc_node(chunk * sizeof(rcd->rcvegrbuf_phys[0]),
+				GFP_KERNEL, rcd->node_id);
 		if (!rcd->rcvegrbuf_phys)
 			goto bail_rcvegrbuf;
 	}
 	for (e = 0; e < rcd->rcvegrbuf_chunks; e++) {
 		if (rcd->rcvegrbuf[e])
 			continue;
+
+		old_dev_node = dev_to_node(&dd->pcidev->dev);
+		set_dev_node(&dd->pcidev->dev, rcd->node_id);
 		rcd->rcvegrbuf[e] =
 			dma_alloc_coherent(&dd->pcidev->dev, size,
 					   &rcd->rcvegrbuf_phys[e],
 					   gfp_flags);
+		set_dev_node(&dd->pcidev->dev, old_dev_node);
 		if (!rcd->rcvegrbuf[e])
 			goto bail_rcvegrbuf_phys;
 	}

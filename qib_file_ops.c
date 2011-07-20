@@ -1359,7 +1359,7 @@ static int setup_ctxt(struct qib_pportdata *ppd, int ctxt,
 	void *ptmp = NULL;
 	int ret;
 
-	rcd = qib_create_ctxtdata(ppd, ctxt);
+	rcd = qib_create_ctxtdata(ppd, ctxt, numa_node_id());
 
 	/*
 	 * Allocate memory for use in qib_tid_update() at open to
