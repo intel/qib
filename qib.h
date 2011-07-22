@@ -429,6 +429,7 @@ struct qib_msix_entry {
 	struct msix_entry msix;
 	void *arg;
 	char name[MAX_NAME_SIZE];
+	cpumask_var_t mask;
 };
 
 /* Below is an opaque struct. Each chip (device) can maintain

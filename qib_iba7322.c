@@ -2839,9 +2839,13 @@ static void qib_7322_nomsix(struct qib_devdata *dd)
 		int i;
 
 		dd->cspec->num_msix_entries = 0;
-		for (i = 0; i < n; i++)
+		for (i = 0; i < n; i++) {
+			irq_set_affinity_hint(
+			  dd->cspec->msix_entries[i].msix.vector, NULL);
+			free_cpumask_var(dd->cspec->msix_entries[i].mask);
 			free_irq(dd->cspec->msix_entries[i].msix.vector,
 			   dd->cspec->msix_entries[i].arg);
+		}
 		qib_nomsix(dd);
 	}
 	/* make sure no MSIx interrupts are left pending */
@@ -3411,6 +3415,8 @@ static void qib_setup_7322_interrupt(struct qib_devdata *dd, int clearpend)
 	int ret, i, msixnum;
 	u64 redirect[6];
 	u64 mask;
+	const struct cpumask *local_mask;
+	int firstcpu, secondcpu = 0, currrcvcpu = 0;
 
 	if (!dd->num_pports) {
 		qib_dbg("No ports, skipping interrupt setup\n");
@@ -3461,6 +3467,19 @@ try_intx:
 	memset(redirect, 0, sizeof redirect);
 	mask = ~0ULL;
 	msixnum = 0;
+	local_mask = cpumask_of_pcibus(dd->pcidev->bus);
+	firstcpu = cpumask_first(local_mask);
+	if (firstcpu >= nr_cpu_ids ||
+			cpumask_weight(local_mask) == num_online_cpus()) {
+		local_mask = cpumask_of_node(cpu_to_node(0));
+		firstcpu = cpumask_first(local_mask);
+	}
+	if (firstcpu < nr_cpu_ids) {
+		secondcpu = cpumask_next(firstcpu, local_mask);
+		if (secondcpu >= nr_cpu_ids)
+			secondcpu = firstcpu;
+		currrcvcpu = secondcpu;
+	}
 	for (i = 0; msixnum < dd->cspec->num_msix_entries; i++) {
 		irq_handler_t handler;
 		void *arg;
@@ -3535,6 +3554,25 @@ try_intx:
 		}
 		val = qib_read_kreg64(dd, 2 * msixnum + 1 +
 			(QIB_7322_MsixTable_OFFS / sizeof(u64)));
+		if (firstcpu < nr_cpu_ids &&
+			zalloc_cpumask_var(
+				&dd->cspec->msix_entries[msixnum].mask,
+				GFP_KERNEL)) {
+			if (handler == qib_7322pintr) {
+				cpumask_set_cpu(currrcvcpu,
+					dd->cspec->msix_entries[msixnum].mask);
+				currrcvcpu = cpumask_next(currrcvcpu,
+					local_mask);
+				if (currrcvcpu >= nr_cpu_ids)
+					currrcvcpu = secondcpu;
+			} else {
+				cpumask_set_cpu(firstcpu,
+					dd->cspec->msix_entries[msixnum].mask);
+			}
+			irq_set_affinity_hint(
+				dd->cspec->msix_entries[msixnum].msix.vector,
+				dd->cspec->msix_entries[msixnum].mask);
+		}
 		msixnum++;
 	}
 	/* Initialize the vector mapping */
