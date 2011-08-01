@@ -111,6 +111,19 @@ struct qib_eep_log_mask {
 	u64 hwerrs_to_log;
 };
 
+/*
+ * Indicates to the driver that the loadable parameter could be
+ * configured by it as it was not configured by the user.
+ */
+#define QIB_DRIVER_AUTO_CONFIGURATION 10
+
+#if defined(CONFIG_X86_64) && defined(CONFIG_NUMA)
+#define qib_configure_numa(a) \
+	(a.x86_vendor == X86_VENDOR_INTEL && a.x86 == 6 && a.x86_model == 45)
+#else
+#define qib_configure_numa(a) 0
+#endif
+
 #define QIB_PARAM_ERROR(a) \
 	printk(KERN_ERR QIB_DRV_NAME \
 		": Invalid value %d for loadable param %s\n", qib_##a, #a);
@@ -1405,6 +1418,8 @@ extern unsigned qib_n_krcv_queues;
 extern unsigned qib_sdma_fetch_arb;
 extern unsigned qib_compat_ddr_negotiate;
 extern int qib_special_trigger;
+extern unsigned qib_pio_avail_bits;
+extern unsigned qib_rcvhdrpoll;
 
 extern struct mutex qib_mutex;
 

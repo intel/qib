@@ -70,9 +70,10 @@ unsigned qib_n_krcv_queues;
 module_param_named(krcvqs, qib_n_krcv_queues, uint, S_IRUGO);
 MODULE_PARM_DESC(krcvqs, "number of kernel receive queues per IB port");
 
-unsigned qib_numa_aware;
+unsigned qib_numa_aware = QIB_DRIVER_AUTO_CONFIGURATION;
 module_param_named(numa_aware, qib_numa_aware, uint, S_IRUGO);
-MODULE_PARM_DESC(numa_aware, "Use NUMA aware allocation");
+MODULE_PARM_DESC(numa_aware, "Use NUMA aware allocation"
+	"0=disabled, 1=enabled, 10=driver auto configuration");
 
 /*
  * qib_wc_pat parameter:
@@ -1125,6 +1126,15 @@ static int __init qlogic_ib_init(void)
 		ret = -ENOMEM;
 		goto bail_wq;
 	}
+
+	if (qib_numa_aware == QIB_DRIVER_AUTO_CONFIGURATION)
+		qib_numa_aware = qib_configure_numa(boot_cpu_data) ? 1 : 0;
+
+	if (qib_rcvhdrpoll == QIB_DRIVER_AUTO_CONFIGURATION)
+		qib_rcvhdrpoll = qib_configure_numa(boot_cpu_data) ? 0 : 1;
+
+	if (qib_pio_avail_bits == QIB_DRIVER_AUTO_CONFIGURATION)
+		qib_pio_avail_bits = qib_configure_numa(boot_cpu_data) ? 0 : 1;
 
 	/*
 	 * These must be called before the driver is registered with

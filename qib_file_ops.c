@@ -57,10 +57,11 @@
  * socket. For older applications, ie.., with QIB_USER_SWMINOR less than
  * 12, all processes will read the register from main memory.
  */
-static unsigned qib_pio_avail_bits = 1;
+unsigned qib_pio_avail_bits = QIB_DRIVER_AUTO_CONFIGURATION;
 module_param_named(pio_avail_bits, qib_pio_avail_bits, uint, S_IRUGO);
 MODULE_PARM_DESC(pio_avail_bits, "Set send buffer status read method:"
-	 "0=default, 1=memory read only, 2=memory IO read only");
+	"0=default, 1=memory read only, 2=memory IOread only,"
+	"10=driver auto configuration");
 
 /*
  * Option for a user application to read from the RcvHdrTailn registers
@@ -72,10 +73,11 @@ MODULE_PARM_DESC(pio_avail_bits, "Set send buffer status read method:"
  * QIB_USER_SWMINOR less than 12, all user processes will read the
  * register from main memory.
  */
-static unsigned qib_rcvhdrpoll = 1;
+unsigned qib_rcvhdrpoll = QIB_DRIVER_AUTO_CONFIGURATION;
 module_param_named(rcvhdrpoll, qib_rcvhdrpoll, uint, S_IRUGO);
 MODULE_PARM_DESC(rcvhdrpoll, "Set receive buffer status read method:"
-	 "0=default, 1=memory read only, 2=memory IO read only");
+	"0=default, 1=memory read only, 2=memory IO read only,"
+	"10=driver auto configuration");
 
 static int qib_open(struct inode *, struct file *);
 static int qib_close(struct inode *, struct file *);
