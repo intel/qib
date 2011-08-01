@@ -111,6 +111,9 @@ struct qib_eep_log_mask {
 	u64 hwerrs_to_log;
 };
 
+#define QIB_PARAM_ERROR(a) \
+	printk(KERN_ERR QIB_DRV_NAME \
+		": Invalid value %d for loadable param %s\n", qib_##a, #a);
 /*
  * Below contains all data related to a single context (formerly called port).
  */
@@ -681,6 +684,12 @@ struct qib_devdata {
 
 	/* mem-mapped pointer to base of chip regs */
 	u64 __iomem *kregbase;
+
+	/* mem-mapped base of chip regs plus offset of the SendBufAvail0
+	 * register
+	 */
+	u64 sendbufavail0;
+
 	/* end of mem-mapped chip space excluding sendbuf and user regs */
 	u64 __iomem *kregend;
 	/* physical address of chip for io_remap, etc. */

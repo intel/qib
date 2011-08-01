@@ -3425,6 +3425,8 @@ static int init_6120_variables(struct qib_devdata *dd)
 		ret = init_chip_wc_pat(dd, 0);
 		if (ret)
 			goto bail;
+		dd->sendbufavail0 = qib_read_kreg32(dd, kr_sendregbase) +
+			(u64)dd->kregbase;
 	}
 	set_6120_baseaddrs(dd); /* set chip access pointers now */
 

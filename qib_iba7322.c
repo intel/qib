@@ -6786,6 +6786,8 @@ static int qib_init_7322_variables(struct qib_devdata *dd)
 			qib_dbg("Unable to remap vl15 buffers\n");
 			goto bail;
 		}
+		dd->sendbufavail0 = qib_read_kreg32(dd, kr_sendregbase) +
+			(u64)dd->kregbase;
 	}
 	qib_7322_set_baseaddrs(dd); /* set chip access pointers now */
 

@@ -48,6 +48,35 @@
 #include "qib_common.h"
 #include "qib_user_sdma.h"
 
+/*
+ * Option for a user application to read from the SendBufAvailn registers
+ * for the send buffer status as a memory IO operation or from main memory.
+ * The default mode of operation is to have the user process read this
+ * register from mapped memory when running on the local socket and have
+ * it read from the register directly (memory IO) when running on the far
+ * socket. For older applications, ie.., with QIB_USER_SWMINOR less than
+ * 12, all processes will read the register from main memory.
+ */
+static unsigned qib_pio_avail_bits = 1;
+module_param_named(pio_avail_bits, qib_pio_avail_bits, uint, S_IRUGO);
+MODULE_PARM_DESC(pio_avail_bits, "Set send buffer status read method:"
+	 "0=default, 1=memory read only, 2=memory IO read only");
+
+/*
+ * Option for a user application to read from the RcvHdrTailn registers
+ * for the next empty receive header queue entry as a memory IO operation
+ * or from main memory. The default mode of operation is to have the user
+ * process read this register from mapped memory when running on the local
+ * socket and have it read from the register directly (memory IO) when
+ * running on the far socket. For older applications, ie.., with
+ * QIB_USER_SWMINOR less than 12, all user processes will read the
+ * register from main memory.
+ */
+static unsigned qib_rcvhdrpoll = 1;
+module_param_named(rcvhdrpoll, qib_rcvhdrpoll, uint, S_IRUGO);
+MODULE_PARM_DESC(rcvhdrpoll, "Set receive buffer status read method:"
+	 "0=default, 1=memory read only, 2=memory IO read only");
+
 static int qib_open(struct inode *, struct file *);
 static int qib_close(struct inode *, struct file *);
 static ssize_t qib_write(struct file *, const char __user *, size_t, loff_t *);
@@ -95,6 +124,7 @@ static int qib_get_base_info(struct file *fp, void __user *ubase,
 	unsigned subctxt_cnt;
 	int shared, master;
 	size_t sz;
+	int local_node = (numa_node_id() == pcibus_to_node(dd->pcidev->bus));
 
 	subctxt_cnt = rcd->subctxt_cnt;
 	if (!subctxt_cnt) {
@@ -173,15 +203,61 @@ static int qib_get_base_info(struct file *fp, void __user *ubase,
 	 * both can be enabled and used.
 	 */
 	kinfo->spi_rcvhdr_base = (u64) rcd->rcvhdrq_phys;
-	kinfo->spi_rcvhdr_tailaddr = (u64) rcd->rcvhdrqtailaddr_phys;
+	kinfo->spi_uregbase = (u64) dd->uregbase + dd->ureg_align * rcd->ctxt;
+
+	switch (qib_rcvhdrpoll) {
+	case 0:
+		if (local_node)
+			kinfo->spi_rcvhdr_tailaddr =
+				(u64) rcd->rcvhdrqtailaddr_phys;
+		else {
+			kinfo->spi_rcvhdr_tailaddr =
+				(u64) (kinfo->spi_uregbase + ur_rcvhdrtail);
+			kinfo->spi_runtime_flags &= ~QIB_RUNTIME_NODMA_RTAIL;
+		}
+		break;
+	case 1:
+		kinfo->spi_rcvhdr_tailaddr = (u64) rcd->rcvhdrqtailaddr_phys;
+		break;
+	case 2:
+		kinfo->spi_rcvhdr_tailaddr = (u64) (kinfo->spi_uregbase +
+			ur_rcvhdrtail);
+		kinfo->spi_runtime_flags &= ~QIB_RUNTIME_NODMA_RTAIL;
+		break;
+	default:
+		QIB_PARAM_ERROR(rcvhdrpoll);
+		ret = -EINVAL;
+		break;
+	}
+
 	kinfo->spi_rhf_offset = dd->rhf_offset;
 	kinfo->spi_rcv_egrbufs = (u64) rcd->rcvegr_phys;
-	kinfo->spi_pioavailaddr = (u64) dd->pioavailregs_phys;
+
+	switch (qib_pio_avail_bits) {
+	case 0:
+		kinfo->spi_pioavailaddr = local_node ?
+			(u64) dd->pioavailregs_phys : (u64)dd->sendbufavail0;
+		break;
+	case 1:
+		kinfo->spi_pioavailaddr = (u64)dd->pioavailregs_phys;
+		break;
+	case 2:
+		kinfo->spi_pioavailaddr = (u64)dd->sendbufavail0;
+		break;
+	default:
+		QIB_PARAM_ERROR(pio_avail_bits);
+		ret = -EINVAL;
+		break;
+	}
+
+	if (ret < 0)
+		goto bail;
+
 	/* setup per-unit (not port) status area for user programs */
-	kinfo->spi_status = (u64) kinfo->spi_pioavailaddr +
+	kinfo->spi_status = (u64) dd->pioavailregs_phys +
 		(char *) ppd->statusp -
 		(char *) dd->pioavailregs_dma;
-	kinfo->spi_uregbase = (u64) dd->uregbase + dd->ureg_align * rcd->ctxt;
+
 	if (!shared) {
 		kinfo->spi_piocnt = rcd->piocnt;
 		kinfo->spi_piobufbase = (u64) rcd->piobufs;
@@ -1060,6 +1136,37 @@ bail:
 	return ret;
 }
 
+static int mmap_sendbufavail(struct vm_area_struct *vma, struct qib_devdata *dd,
+		     u64 ureg)
+{
+	unsigned long phys;
+	unsigned long sz;
+	int ret;
+
+	/*
+	 * This is real hardware, so use io_remap.  This is the mechanism
+	 * for the user process to update the head registers for their ctxt
+	 * in the chip.
+	 */
+	sz = PAGE_SIZE;
+	if ((vma->vm_end - vma->vm_start) > sz) {
+		qib_devinfo(dd->pcidev, "FAIL mmap userreg: reqlen "
+			 "%lx > PAGE\n", vma->vm_end - vma->vm_start);
+		ret = -EFAULT;
+	} else {
+		phys = dd->physaddr + ureg;
+		vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+
+		vma->vm_flags &= ~VM_MAYWRITE;
+		vma->vm_flags |= VM_DONTCOPY | VM_DONTEXPAND | VM_READ;
+
+		ret = io_remap_pfn_range(vma, vma->vm_start,
+					 phys >> PAGE_SHIFT,
+					 vma->vm_end - vma->vm_start,
+					 vma->vm_page_prot);
+	}
+	return ret;
+}
 /**
  * qib_mmapf - mmap various structures into user space
  * @fp: the file pointer
@@ -1146,6 +1253,8 @@ static int qib_mmapf(struct file *fp, struct vm_area_struct *vma)
 
 	if (pgaddr == ureg)
 		ret = mmap_ureg(vma, dd, ureg);
+	else if (pgaddr == dd->sendbufavail0)
+		ret = mmap_sendbufavail(vma, dd, pgaddr - (u64)dd->kregbase);
 	else if (pgaddr == piobufs)
 		ret = mmap_piobufs(vma, dd, rcd, piobufs, piocnt);
 	else if (pgaddr == dd->pioavailregs_phys)
@@ -1638,6 +1747,10 @@ static int qib_assign_ctxt(struct file *fp, const struct qib_user_info *uinfo)
 		} else
 			qib_cdbg(PROC, "Invalid port algorthm 0x%x, "
 				    "ignoring\n", uinfo->spu_port_alg);
+	}
+	if (swminor <= 11) {
+		qib_pio_avail_bits = 1;
+		qib_rcvhdrpoll = 1;
 	}
 
 	mutex_lock(&qib_mutex);
