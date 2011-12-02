@@ -1500,6 +1500,7 @@ static int setup_ctxt(struct qib_pportdata *ppd, int ctxt,
 		 rcd->comm, current->pid, dd->unit,
 		 rcd->ppd->port, ctxt);
 	qib_stats.sps_ctxts++;
+	dd->freectxts--;
 	ret = 0;
 	goto bail;
 
@@ -2085,6 +2086,7 @@ static int qib_close(struct inode *in, struct file *fp)
 		if (dd->pageshadow)
 			unlock_expected_tids(rcd);
 		qib_stats.sps_ctxts--;
+		dd->freectxts++;
 
 		qib_cdbg(PROC, "%s[%u] closed ctxt %u:%u\n",
 			 rcd->comm, pid, dd->unit, ctxt);

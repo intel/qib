@@ -113,6 +113,7 @@ void qib_set_ctxtcnt(struct qib_devdata *dd)
 		qib_dbg("Configured to use too many ctxts (%u); using %u\n",
 			qib_cfgctxts, dd->cfgctxts);
 	}
+	dd->freectxts = dd->cfgctxts - dd->first_user_ctxt;
 }
 
 /*

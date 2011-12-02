@@ -1,3 +1,6 @@
+2011-12-02 Mike Marciniszyn <mike.marciniszyn@qlogic.com>
+        * Tag 1.5.3-7
+        * IB/qib: Correct nfreectxts for multiple HCAs
 2011-11-02 Mike Marciniszyn <mike.marciniszyn@qlogic.com>
         * Tag 1.5.3-6
 	* IB/qib: Fix panic in RC error flushing logic
