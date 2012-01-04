@@ -3,6 +3,7 @@
         * IB/qib: MADs should return failure with misset mkeys
         * IB/qib: correct ordering of reregister vs. port active event
         * IB/qib: Change driver default for wc_pat to 2 for cross CPU inconsistencies
+        * IB/qib: fix DMA_nnBIT_MASK warnings
 2011-02-14 Mike Marciniszyn <mike.marciniszyn@qlogic.com>
         * Tag 1.5.3-10
         * IB/qib: Hold links until tuning data is available
