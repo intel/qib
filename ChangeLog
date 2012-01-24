@@ -1,3 +1,6 @@
+2011-02-02 Mike Marciniszyn <mike.marciniszyn@qlogic.com>
+        * Tag 1.5.3-9
+        * IB/qib: Avoid filtering lid on SMA portinfo
 2011-12-12 Mike Marciniszyn <mike.marciniszyn@qlogic.com>
         * Tag 1.5.3-8
         * IB/qib: fix drop counter for ud packets
