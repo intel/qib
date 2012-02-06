@@ -57,11 +57,12 @@
  * socket. For older applications, ie.., with QIB_USER_SWMINOR less than
  * 12, all processes will read the register from main memory.
  */
-unsigned qib_pio_avail_bits = QIB_DRIVER_AUTO_CONFIGURATION;
+unsigned qib_pio_avail_bits = 1;
 module_param_named(pio_avail_bits, qib_pio_avail_bits, uint, S_IRUGO);
-MODULE_PARM_DESC(pio_avail_bits, "Set send buffer status read method:"
-	"0=default, 1=memory read only, 2=memory IOread only,"
-	"10=driver auto configuration");
+MODULE_PARM_DESC(pio_avail_bits, "send buffer status read: "
+	"0=memory read on local NUMA node & MMIO read on far nodes, "
+	"1=memory read(default), 2=MMIO read, "
+	"10=option 1 for AMD & <= Intel Westmere cpus and option 0 for newer cpus");
 
 /*
  * Option for a user application to read from the RcvHdrTailn registers
@@ -73,11 +74,12 @@ MODULE_PARM_DESC(pio_avail_bits, "Set send buffer status read method:"
  * QIB_USER_SWMINOR less than 12, all user processes will read the
  * register from main memory.
  */
-unsigned qib_rcvhdrpoll = QIB_DRIVER_AUTO_CONFIGURATION;
+unsigned qib_rcvhdrpoll = 1;
 module_param_named(rcvhdrpoll, qib_rcvhdrpoll, uint, S_IRUGO);
-MODULE_PARM_DESC(rcvhdrpoll, "Set receive buffer status read method:"
-	"0=default, 1=memory read only, 2=memory IO read only,"
-	"10=driver auto configuration");
+MODULE_PARM_DESC(rcvhdrpoll, "receive buffer status read: "
+	"0=memory read on local NUMA node & MMIO read on far nodes, "
+	"1=memory read(default), 2=MMIO read, "
+	"10=option 1 for AMD & <= Intel Westmere cpus and option 0 for newer cpus");
 
 static int qib_open(struct inode *, struct file *);
 static int qib_close(struct inode *, struct file *);

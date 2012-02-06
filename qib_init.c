@@ -72,8 +72,9 @@ MODULE_PARM_DESC(krcvqs, "number of kernel receive queues per IB port");
 
 unsigned qib_numa_aware = QIB_DRIVER_AUTO_CONFIGURATION;
 module_param_named(numa_aware, qib_numa_aware, uint, S_IRUGO);
-MODULE_PARM_DESC(numa_aware, "Use NUMA aware allocation"
-	"0=disabled, 1=enabled, 10=driver auto configuration");
+MODULE_PARM_DESC(numa_aware, "Use NUMA aware allocations: "
+	"0=disabled, 1=enabled, "
+	"10=option 0 for AMD & <= Intel Westmere cpus and option 1 for newer cpus(default)");
 
 /*
  * qib_wc_pat parameter:
