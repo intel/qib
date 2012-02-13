@@ -2559,19 +2559,17 @@ static int qib_7322_bringup_serdes(struct qib_pportdata *ppd)
 	ppd->cpspec->ibcctrl_a |= SYM_MASK(IBCCtrlA_0, IBLinkEn);
 	set_vls(ppd);
 
+	/* Hold the link state machine for mezz boards */
+	qib_cdbg(LINKVERB, "IB%u:%u Holding phys state machine\n",
+		 dd->unit, ppd->port);
+	qib_set_ib_7322_lstate(ppd, 0,
+			       QLOGIC_IB_IBCC_LINKINITCMD_DISABLE);
+
 	/* be paranoid against later code motion, etc. */
 	spin_lock_irqsave(&dd->cspec->rcvmod_lock, flags);
 	ppd->p_rcvctrl |= SYM_MASK(RcvCtrl_0, RcvIBPortEnable);
 	qib_write_kreg_port(ppd, krp_rcvctrl, ppd->p_rcvctrl);
 	spin_unlock_irqrestore(&dd->cspec->rcvmod_lock, flags);
-
-	/* Hold the link state machine for mezz boards */
-	if (IS_QMH(dd) || IS_QME(dd)) {
-		qib_cdbg(LINKVERB, "IB%u:%u Holding link state machine\n",
-			 dd->unit, ppd->port);
-		qib_set_ib_7322_lstate(ppd, 0,
-				       QLOGIC_IB_IBCC_LINKINITCMD_DISABLE);
-	}
 
 	/* Also enable IBSTATUSCHG interrupt.  */
 	val = qib_read_kreg_port(ppd, krp_errmask);
@@ -3013,6 +3011,9 @@ static noinline void unknown_7322_gpio_intr(struct qib_devdata *dd)
 					dd->unit, ppd->port);
 			else {
 				++handled;
+				qib_cdbg(LINKVERB,
+					 "IB%u:%u Processing GPIO ModPrs interrupt\n",
+					 dd->unit, ppd->port);
 				qd->t_insert = get_jiffies_64();
 				schedule_work(&qd->work);
 			}
@@ -5691,6 +5692,8 @@ static int qib_7322_ib_updown(struct qib_pportdata *ppd, int ibup, u64 ibcs)
 				     QIBL_IB_AUTONEG_INPROG)))
 			set_7322_ibspeed_fast(ppd, ppd->link_speed_enabled);
 		if (!(ppd->lflags & QIBL_IB_AUTONEG_INPROG)) {
+			struct qib_qsfp_data *qd =
+				&ppd->cpspec->qsfp_data;
 			/* unlock the Tx settings, speed may change */
 			qib_write_kreg_port(ppd, krp_tx_deemph_override,
 				SYM_MASK(IBSD_TX_DEEMPHASIS_OVERRIDE_0,
@@ -5698,6 +5701,12 @@ static int qib_7322_ib_updown(struct qib_pportdata *ppd, int ibup, u64 ibcs)
 			qib_cancel_sends(ppd);
 			/* on link down, ensure sane pcs state */
 			qib_7322_mini_pcs_reset(ppd);
+			/* schedule the qsfp refresh which should turn the link
+			   off */
+			if (ppd->dd->flags & QIB_HAS_QSFP) {
+				qd->t_insert = get_jiffies_64();
+				schedule_work(&qd->work);
+			}
 			spin_lock_irqsave(&ppd->sdma_lock, flags);
 			if (__qib_sdma_running(ppd)) {
 				qib_dbg("IB%u:%u went down, idling sdma\n",
@@ -6098,48 +6107,73 @@ static void qsfp_7322_event(struct work_struct *work)
 
 	qd = container_of(work, struct qib_qsfp_data, work);
 	ppd = qd->ppd;
-	pwrup = qd->t_insert + msecs_to_jiffies(QSFP_PWR_LAG_MSEC);
+	pwrup = qd->t_insert +
+		msecs_to_jiffies(QSFP_PWR_LAG_MSEC - QSFP_MODPRS_LAG_MSEC);
 
-	/*
-	 * Some QSFP's not only do not respond until the full power-up
-	 * time, but may behave badly if we try. So hold off responding
-	 * to insertion.
-	 */
-	while (1) {
-		u64 now = get_jiffies_64();
-		if (time_after64(now, pwrup))
-			break;
-		msleep(20);
-	}
-	ret = qib_refresh_qsfp_cache(ppd, &qd->cache);
-	/*
-	 * Need to change LE2 back to defaults if we couldn't
-	 * read the cable type (to handle cable swaps), so do this
-	 * even on failure to read cable information.  We don't
-	 * get here for QME, so IS_QME check not needed here.
-	 */
-	if (!ret && !ppd->dd->cspec->r1) {
-		if (QSFP_IS_ACTIVE_FAR(qd->cache.tech))
-			le2 = LE2_QME;
-		else if (qd->cache.atten[1] >= qib_long_atten &&
-			 QSFP_IS_CU(qd->cache.tech))
-			le2 = LE2_5m;
-		else
+	/* Delay for 20 msecs to allow ModPrs resistor to setup */
+	mdelay(QSFP_MODPRS_LAG_MSEC);
+
+	if (!qib_qsfp_mod_present(ppd)) {
+		/* Set the physical link to disabled */
+		qib_cdbg(LINKVERB,
+			 "IB%u:%u Holding physical state machine\n",
+			 ppd->dd->unit, ppd->port);
+		qib_set_ib_7322_lstate(ppd, 0,
+				       QLOGIC_IB_IBCC_LINKINITCMD_DISABLE);
+	} else {
+		/*
+		 * Some QSFP's not only do not respond until the full power-up
+		 * time, but may behave badly if we try. So hold off responding
+		 * to insertion.
+		 */
+		while (1) {
+			u64 now = get_jiffies_64();
+			if (time_after64(now, pwrup))
+				break;
+			msleep(20);
+		}
+
+		ret = qib_refresh_qsfp_cache(ppd, &qd->cache);
+
+		/*
+		 * Need to change LE2 back to defaults if we couldn't
+		 * read the cable type (to handle cable swaps), so do this
+		 * even on failure to read cable information.  We don't
+		 * get here for QME, so IS_QME check not needed here.
+		 */
+		if (!ret && !ppd->dd->cspec->r1) {
+			if (QSFP_IS_ACTIVE_FAR(qd->cache.tech))
+				le2 = LE2_QME;
+			else if (qd->cache.atten[1] >= qib_long_atten &&
+				 QSFP_IS_CU(qd->cache.tech))
+				le2 = LE2_5m;
+			else
+				le2 = LE2_DEFAULT;
+		} else
 			le2 = LE2_DEFAULT;
-	} else
-		le2 = LE2_DEFAULT;
-	ibsd_wr_allchans(ppd, 13, (le2 << 7), BMASK(9, 7));
-	qib_cdbg(INIT, "IB%u:%u set LE2=%u\n", ppd->dd->unit,
-		 ppd->port, le2);
-	/*
-	 * We always change parameteters, since we can choose
-	 * values for cables without eeproms, and the cable may have
-	 * changed from a cable with full or partial eeprom content
-	 * to one with partial or no content.  qib_qsfp_short_msg
-	 * will print sane contents on eeprom reads.
-	 */
-	qib_qsfp_short_msg(qd);
-	init_txdds_table(ppd, 0);
+		ibsd_wr_allchans(ppd, 13, (le2 << 7), BMASK(9, 7));
+		qib_cdbg(INIT, "IB%u:%u set LE2=%u\n", ppd->dd->unit,
+			 ppd->port, le2);
+		/*
+		 * We always change parameteters, since we can choose
+		 * values for cables without eeproms, and the cable may have
+		 * changed from a cable with full or partial eeprom content
+		 * to one with partial or no content.  qib_qsfp_short_msg
+		 * will print sane contents on eeprom reads.
+		 */
+		qib_qsfp_short_msg(qd);
+		init_txdds_table(ppd, 0);
+		/* The physical link is being re-enabled only when the
+		   previous state was DISABLED. This should only happen when
+		   the cable has been physically pulled. */
+		if (ppd->lflags & QIBL_IB_LINK_DISABLED) {
+			qib_cdbg(LINKVERB,
+				 "IB%u:%u Releasing phys state machine\n",
+				 ppd->dd->unit, ppd->port);
+			qib_set_ib_7322_lstate(ppd, 0,
+				QLOGIC_IB_IBCC_LINKINITCMD_SLEEP);
+		}
+	}
 }
 
 /*
@@ -6249,7 +6283,8 @@ static void set_no_qsfp_atten(struct qib_devdata *dd, int change)
 			/* now change the IBC and serdes, overriding generic */
 			init_txdds_table(ppd, 1);
 			/* Re-enable the physical state machine on mezz boards
-			 * now that the correct settings have been set. */
+			 * now that the correct settings have been set.
+			 * QSFP boards are handles by the QSFP event handler */
 			if (IS_QMH(dd) || IS_QME(dd)) {
 				qib_cdbg(LINKVERB, "IB%u:%u Re-enable "
 					 "phys state machine\n",
@@ -7814,8 +7849,11 @@ static void find_best_ent(struct qib_pportdata *ppd,
 		}
 	}
 
-	/* Lookup serdes setting by cable type and attenuation */
+	/* Active cables don't have attenuation so we only set SERDES
+	 * settings to account for the attenuation of the board traces. */
 	if (!override && QSFP_IS_ACTIVE(qd->tech)) {
+		qib_cdbg(INIT, "IB%u:%u board attenuation idx: %u\n",
+			 ppd->dd->unit, ppd->port, ppd->dd->board_atten);
 		*sdr_dds = txdds_sdr + ppd->dd->board_atten;
 		*ddr_dds = txdds_ddr + ppd->dd->board_atten;
 		*qdr_dds = txdds_qdr + ppd->dd->board_atten;
@@ -8140,12 +8178,6 @@ static int serdes_7322_init_new(struct qib_pportdata *ppd)
 	u32 le_val, rxcaldone;
 	int chan, chan_done = (1 << SERDES_CHANS) - 1;
 
-	/*
-	 * Initialize the Tx DDS tables.  Also done every QSFP event,
-	 * for adapters with QSFP
-	 */
-	init_txdds_table(ppd, 0);
-
 	/* Clear cmode-override, may be set from older driver */
 	ahb_mod(ppd->dd, IBSD(ppd->hw_pidx), 5, 10, 0 << 14, 1 << 14);
 
@@ -8330,6 +8362,12 @@ static int serdes_7322_init_new(struct qib_pportdata *ppd)
 	ibsd_wr_allchans(ppd, 11, (1 << 11), BMASK(12, 11));
 	/* VGA output common mode */
 	ibsd_wr_allchans(ppd, 12, (3 << 2), BMASK(3, 2));
+
+	/*
+	 * Initialize the Tx DDS tables.  Also done every QSFP event,
+	 * for adapters with QSFP
+	 */
+	init_txdds_table(ppd, 0);
 
 	return 0;
 }
