@@ -515,15 +515,9 @@ void qib_qsfp_init(struct qib_qsfp_data *qd,
 		mask <<= QSFP_GPIO_PORT2_SHIFT;
 
 	/* Do not try to wait here. Better to let event handle it */
-	if (!qib_qsfp_mod_present(qd->ppd)) {
+	if (!qib_qsfp_mod_present(qd->ppd))
 		qib_dbg("IB%u:%u has no QSFP module present\n",
 			qd->ppd->dd->unit, qd->ppd->port);
-		goto bail;
-	}
-	/* We see a module, but it may be unwise to look yet. Just schedule */
-	qd->t_insert = get_jiffies_64();
-	schedule_work(&qd->work);
-bail:
 	return;
 }
 
