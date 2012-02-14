@@ -1,3 +1,10 @@
+2011-02-14 Mike Marciniszyn <mike.marciniszyn@qlogic.com>
+        * Tag 1.5.3-10
+        * IB/qib: Hold links until tuning data is available
+        * IB/qib: Fix issue with link states and QSFP cables
+        * IB/qib: Fix over-scheduling of QSFP work
+        * IB/qib: Fix qib driver mkey lease timeout handling
+        * IB/qib: Default some module parameters optimally
 2011-02-02 Mike Marciniszyn <mike.marciniszyn@qlogic.com>
         * Tag 1.5.3-9
         * IB/qib: Change driver default for rcvhdrpoll and pio_avail_bits
