@@ -6,6 +6,7 @@
         * IB/qib: fix DMA_nnBIT_MASK warnings
         * IB/qib: include slab.h as necessary for newer kernels
         * IB/qib: optimize pio ack buffer allocation
+        * IB/qib: Fix QLE734X link cycling
 2011-02-14 Mike Marciniszyn <mike.marciniszyn@qlogic.com>
         * Tag 1.5.3-10
         * IB/qib: Hold links until tuning data is available
