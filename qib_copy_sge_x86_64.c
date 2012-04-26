@@ -86,7 +86,7 @@ void qib_copy_sge(struct qib_sge_state *ss, void *data, u32 length, int release)
 					__memcpy(sge->vaddr, data, len);
 			}
 		} else {
-			if ((!sge->mr->pd || !to_ipd(sge->mr->pd)->user)
+			if ((sge->mr->pd && !to_ipd(sge->mr->pd)->user)
 					&& ss->total_len >= qib_ss_size)
 				memcpy_cachebypass2(sge->vaddr, data, len);
 			else
