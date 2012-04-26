@@ -79,11 +79,11 @@ memcpy_cachebypass:
 	ja	.L64
 	movl	$16, %ecx	/* rdx is 16..63 */
 .L25:
-	movq	8(%rsi), %r8
-	movq	(%rsi), %r9
+	movq	(%rsi), %r8
+	movq	8(%rsi), %r9
 	addq	%rcx, %rsi
-	movq	%r8, 8(%rdi)
-	movq	%r9, (%rdi)
+	movq	%r8, (%rdi)
+	movq	%r9, 8(%rdi)
 	addq	%rcx, %rdi
 	subq	%rcx, %rdx
 	cmpl	%edx, %ecx	/* is rdx >= 16? */
@@ -196,11 +196,11 @@ memcpy_cachebypass2:
 	ja	.L2_64
 	movl	$16, %ecx	/* rdx is 16..63 */
 .L2_25:
-	movq	8(%rsi), %r8
-	movq	(%rsi), %r9
+	movq	(%rsi), %r8
+	movq	8(%rsi), %r9
 	addq	%rcx, %rsi
-	movq	%r8, 8(%rdi)
-	movq	%r9, (%rdi)
+	movq	%r8, (%rdi)
+	movq	%r9, 8(%rdi)
 	addq	%rcx, %rdi
 	subq	%rcx, %rdx
 	cmpl	%edx, %ecx	/* is rdx >= 16? */
