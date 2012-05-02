@@ -1,6 +1,7 @@
 2011-05-02 Mike Marciniszyn <mike.marciniszyn@intel.com>
         * Tag 1.5.3-11
         * IB/qib: MADs should return failure with misset mkeys
+        * IB/qib: correct ordering of reregister vs. port active event
 2011-02-14 Mike Marciniszyn <mike.marciniszyn@qlogic.com>
         * Tag 1.5.3-10
         * IB/qib: Hold links until tuning data is available
