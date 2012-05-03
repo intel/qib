@@ -139,14 +139,12 @@ static int validate_old_pat(void)
 	int onetime = 1;
 	u32 my_pat1 = old_pat_lo[smp_processor_id()] & ~QIB_PAT_MASK;
 
-	if (qib_wc_pat == 2)
-		goto done;
-
 	for (i = 0; i < ncpus; i++) {
 		u32 this_pat1 = old_pat_lo[i] & ~QIB_PAT_MASK;
 		if (this_pat1 != my_pat1) {
-			qib_dbg("Inconsistent PAT1 settings across CPUs\n");
 			ret = -ENOSYS;
+			QIB_LOG_PAT(
+			 ": Inconsistent PAT1 settings across CPUs\n");
 			goto done;
 		} else if (this_pat1 == QIB_PAT_MOD) {
 			if (onetime) {
@@ -155,13 +153,21 @@ static int validate_old_pat(void)
 				onetime = 0;
 			}
 		} else if (this_pat1 != QIB_PAT_EXP) {
-			qib_dbg("PAT1 not in expected WT state\n");
+			QIB_LOG_PAT(": PAT1 not in expected WT state\n");
 			ret = -ENOSYS;
 			goto done;
 		}
 	}
-done:
+
 	return ret;
+done:
+	if (qib_wc_pat != 2) {
+		printk(KERN_ERR QIB_DRV_NAME ": For optimal performance please reload driver with the option 'wc_pat=2'\n");
+
+		return ret;
+	}
+
+	return 0;
 }
 
 static int read_and_modify_pat(void)

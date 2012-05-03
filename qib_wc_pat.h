@@ -40,6 +40,13 @@
 
 extern unsigned qib_wc_pat;
 
+#define QIB_LOG_PAT(s) do {			\
+	if (qib_wc_pat == 2)			\
+		qib_dbg(s);			\
+	else					\
+		printk(KERN_ERR QIB_DRV_NAME s);\
+} while (0)
+
 int qib_enable_wc_pat(void);
 void qib_disable_wc_pat(void);
 int qib_wc_pat_enabled(void);

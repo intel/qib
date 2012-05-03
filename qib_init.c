@@ -82,9 +82,9 @@ MODULE_PARM_DESC(numa_aware, "Use NUMA aware allocations: "
  *      1 is WC via PAT
  *      If PAT initialization fails, code reverts back to MTRR
  */
-unsigned qib_wc_pat = 1; /* default (1) is to use PAT, not MTRR */
+unsigned qib_wc_pat = 2;
 module_param_named(wc_pat, qib_wc_pat, uint, S_IRUGO);
-MODULE_PARM_DESC(wc_pat, "enable write-combining via PAT mechanism");
+MODULE_PARM_DESC(wc_pat, "Enable write-combining (0=via MTRR, 1=via PAT, 2=Force via PAT (default))");
 
 struct workqueue_struct *qib_wq;
 struct workqueue_struct *qib_cq_wq;
