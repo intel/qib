@@ -33,6 +33,7 @@
 
 #include <linux/err.h>
 #include <linux/vmalloc.h>
+#include <linux/slab.h>
 
 #include "qib_verbs.h"
 
