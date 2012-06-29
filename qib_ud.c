@@ -195,7 +195,7 @@ static void qib_ud_loopback(struct qib_qp *sqp, struct qib_swqe *swqe)
 		length -= len;
 	}
 	while (qp->r_sge.num_sge) {
-		atomic_dec(&qp->r_sge.sge.mr->refcount);
+		qib_put_mr(qp->r_sge.sge.mr);
 		if (--qp->r_sge.num_sge)
 			qp->r_sge.sge = *qp->r_sge.sg_list++;
 	}
@@ -557,7 +557,7 @@ void qib_ud_rcv(struct qib_ibport *ibp, struct qib_ib_header *hdr,
 		qib_skip_sge(&qp->r_sge, sizeof(struct ib_grh), 1);
 	qib_copy_sge(&qp->r_sge, data, wc.byte_len - sizeof(struct ib_grh), 1);
 	while (qp->r_sge.num_sge) {
-		atomic_dec(&qp->r_sge.sge.mr->refcount);
+		qib_put_mr(qp->r_sge.sge.mr);
 		if (--qp->r_sge.num_sge)
 			qp->r_sge.sge = *qp->r_sge.sg_list++;
 	}

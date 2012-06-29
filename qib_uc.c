@@ -282,7 +282,7 @@ inv:
 			qp->r_sge.num_sge = 0;
 		} else
 			while (qp->r_sge.num_sge) {
-				atomic_dec(&qp->r_sge.sge.mr->refcount);
+				qib_put_mr(qp->r_sge.sge.mr);
 				if (--qp->r_sge.num_sge)
 					qp->r_sge.sge = *qp->r_sge.sg_list++;
 			}
@@ -403,7 +403,7 @@ send_last:
 		wc.opcode = IB_WC_RECV;
 		qib_copy_sge(&qp->r_sge, data, tlen, 0);
 		while (qp->s_rdma_read_sge.num_sge) {
-			atomic_dec(&qp->s_rdma_read_sge.sge.mr->refcount);
+			qib_put_mr(qp->s_rdma_read_sge.sge.mr);
 			if (--qp->s_rdma_read_sge.num_sge)
 				qp->s_rdma_read_sge.sge =
 					*qp->s_rdma_read_sge.sg_list++;
@@ -494,8 +494,7 @@ rdma_last_imm:
 			goto drop;
 		if (test_and_clear_bit(QIB_R_REWIND_SGE, &qp->r_aflags))
 			while (qp->s_rdma_read_sge.num_sge) {
-				atomic_dec(&qp->s_rdma_read_sge.sge.mr->
-					   refcount);
+				qib_put_mr(qp->s_rdma_read_sge.sge.mr);
 				if (--qp->s_rdma_read_sge.num_sge)
 					qp->s_rdma_read_sge.sge =
 						*qp->s_rdma_read_sge.sg_list++;
@@ -531,7 +530,7 @@ rdma_last:
 			goto drop;
 		qib_copy_sge(&qp->r_sge, data, tlen, 1);
 		while (qp->r_sge.num_sge) {
-			atomic_dec(&qp->r_sge.sge.mr->refcount);
+			qib_put_mr(qp->r_sge.sge.mr);
 			if (--qp->r_sge.num_sge)
 				qp->r_sge.sge = *qp->r_sge.sg_list++;
 		}

@@ -191,7 +191,7 @@ qib_copy_sge(struct qib_sge_state *ss, void *data, u32 length, int release)
 		sge->sge_length -= len;
 		if (sge->sge_length == 0) {
 			if (release)
-				atomic_dec(&sge->mr->refcount);
+				qib_put_mr(sge->mr);
 			if (--ss->num_sge)
 				*sge = *ss->sg_list++;
 		} else if (sge->length == 0 && sge->mr->lkey) {
@@ -232,7 +232,7 @@ void qib_skip_sge(struct qib_sge_state *ss, u32 length, int release)
 		sge->sge_length -= len;
 		if (sge->sge_length == 0) {
 			if (release)
-				atomic_dec(&sge->mr->refcount);
+				qib_put_mr(sge->mr);
 			if (--ss->num_sge)
 				*sge = *ss->sg_list++;
 		} else if (sge->length == 0 && sge->mr->lkey) {
@@ -440,7 +440,7 @@ bail_inval_free:
 	while (j) {
 		struct qib_sge *sge = &wqe->sg_list[--j];
 
-		atomic_dec(&sge->mr->refcount);
+		qib_put_mr(sge->mr);
 	}
 bail_inval:
 	ret = -EINVAL;
@@ -1144,7 +1144,7 @@ void qib_put_txreq(struct qib_verbs_txreq *tx)
 	if (atomic_dec_and_test(&qp->refcount))
 		wake_up(&qp->wait);
 	if (tx->mr) {
-		atomic_dec(&tx->mr->refcount);
+		qib_put_mr(tx->mr);
 		tx->mr = NULL;
 	}
 	if (tx->txreq.flags & QIB_SDMA_TXREQ_F_FREEBUF) {
@@ -1501,7 +1501,7 @@ done:
 	}
 	qib_sendbuf_done(dd, pbufn);
 	if (qp->s_rdma_mr) {
-		atomic_dec(&qp->s_rdma_mr->refcount);
+		qib_put_mr(qp->s_rdma_mr);
 		qp->s_rdma_mr = NULL;
 	}
 	if (qp->s_wqe) {
