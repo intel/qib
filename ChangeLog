@@ -1,4 +1,10 @@
-2011-05-03 Mike Marciniszyn <mike.marciniszyn@intel.com>
+2012-09-12 Mike Marciniszyn <mike.marciniszyn@intel.com>
+        * Tag 1.5.3-12
+        * IB/qib: fix UC MR refs for immediate operations
+        * IB/qib: Avoid returning EBUSY from MR deregister
+        * IB/qib: RCU locking for MR validation
+        * IB/qib: fix compliance test failure C14-024#06_LocalPortNum
+2012-05-03 Mike Marciniszyn <mike.marciniszyn@intel.com>
         * Tag 1.5.3-11
         * IB/qib: MADs should return failure with misset mkeys
         * IB/qib: correct ordering of reregister vs. port active event
@@ -10,14 +16,14 @@
         * IB/qib: Display correct value for number of contexts
         * IB/qib: patch for ordering issue with 16 bytes writes at tail of move
         * IB/qib: patch for bypass selection logic
-2011-02-14 Mike Marciniszyn <mike.marciniszyn@qlogic.com>
+2012-02-14 Mike Marciniszyn <mike.marciniszyn@qlogic.com>
         * Tag 1.5.3-10
         * IB/qib: Hold links until tuning data is available
         * IB/qib: Fix issue with link states and QSFP cables
         * IB/qib: Fix over-scheduling of QSFP work
         * IB/qib: Fix qib driver mkey lease timeout handling
         * IB/qib: Default some module parameters optimally
-2011-02-02 Mike Marciniszyn <mike.marciniszyn@qlogic.com>
+2012-02-02 Mike Marciniszyn <mike.marciniszyn@qlogic.com>
         * Tag 1.5.3-9
         * IB/qib: Change driver default for rcvhdrpoll and pio_avail_bits
         * IB/qib: Avoid filtering lid on SMA portinfo
