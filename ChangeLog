@@ -1,3 +1,8 @@
+2012-09-28 Mike Marciniszyn <mike.marciniszyn@intel.com>
+        * Tag 1.5.3-13
+        * IB/qib: Add a qib driver version
+        * IB/qib: fix local access validation for user MRs
+
 2012-09-12 Mike Marciniszyn <mike.marciniszyn@intel.com>
         * Tag 1.5.3-12
         * IB/qib: fix UC MR refs for immediate operations

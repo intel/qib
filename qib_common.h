@@ -301,6 +301,19 @@ struct qib_base_info {
 #define QIB_KERN_SWVERSION ((QIB_KERN_TYPE << 31) | QIB_USER_SWVERSION)
 
 /*
+ * Define the driver version number.  This is something that refers only
+ * to the driver itself, not the software interfaces it supports.
+ */
+#define QIB_DRIVER_VERSION_BASE "1.11"
+
+/* create the final driver version string */
+#ifdef QIB_IDSTR
+#define QIB_DRIVER_VERSION QIB_DRIVER_VERSION_BASE " " QIB_IDSTR
+#else
+#define QIB_DRIVER_VERSION QIB_DRIVER_VERSION_BASE
+#endif
+
+/*
  * If the unit is specified via open, HCA choice is fixed.  If port is
  * specified, it's also fixed.  Otherwise we try to spread contexts
  * across ports and HCAs, using different algorithims.  WITHIN is

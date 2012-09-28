@@ -2348,7 +2348,7 @@ int qib_register_ib_device(struct qib_devdata *dd)
 	ibdev->dma_ops = &qib_dma_mapping_ops;
 
 	snprintf(ibdev->node_desc, sizeof(ibdev->node_desc),
-		init_utsname()->nodename);
+		 "QLogic Infiniband HCA");
 
 	ret = ib_register_device(ibdev, qib_create_port_files);
 	if (ret)
