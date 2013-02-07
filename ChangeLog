@@ -1,3 +1,6 @@
+2013-02-07 Mike Marciniszyn <mike.marciniszyn@intel.com>
+        * Tag 1.5.3-14
+        * IB/qib: fix qp locate remove race
 2012-09-28 Mike Marciniszyn <mike.marciniszyn@intel.com>
         * Tag 1.5.3-13
         * IB/qib: Add a qib driver version
