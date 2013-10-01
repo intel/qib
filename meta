@@ -1,8 +1,7 @@
 Version: 1
-Previous: e61ea25f6a5a2aadd6716881d88774e0013a1168
-Head: 78aceeae0d6f55b4e73c645dbd718bcc2bbfac55
+Previous: 77865fe3d3dfe94497dfe3a7f136c990614adaaf
+Head: a071cf04c7c854b0bf8616318f00c19504c772ed
 Applied:
-  qib_legal_info.patch: 64c2d00238179bcf9381e77435dcbb0916712288
-  refresh-temp: 78aceeae0d6f55b4e73c645dbd718bcc2bbfac55
+  qib_legal_info.patch: a071cf04c7c854b0bf8616318f00c19504c772ed
 Unapplied:
 Hidden:
