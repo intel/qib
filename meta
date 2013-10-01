@@ -1,6 +1,7 @@
 Version: 1
-Previous: None
-Head: 8f2706639dda70295b85ea23c17a4bfce5b09d6f
+Previous: cdc2ad664f2d6a4173cc99adfbec449cd53910e4
+Head: 64c2d00238179bcf9381e77435dcbb0916712288
 Applied:
+  qib_legal_info.patch: 64c2d00238179bcf9381e77435dcbb0916712288
 Unapplied:
 Hidden:
