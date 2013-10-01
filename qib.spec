@@ -3,8 +3,8 @@
 %define kver %{require_kver}
 BuildRequires: kernel-devel = %{kver}
 %else
-%define kdir %((echo X; ls -1d /usr/src/kernels/*)|tail -1)
-%define kver %(basename %{kdir})
+%define kver %(uname -r)
+%define kdir /usr/src/kernels/%{kver}
 BuildRequires: kernel-devel
 %endif
 %if 0%{!?build_src_rpm:1}

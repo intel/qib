@@ -1,3 +1,5 @@
+2013-10-01 Mike Marciniszyn <mike.marciniszyn@intel.com>
+	* Add licensing info
 2013-02-08 Mike Marciniszyn <mike.marciniszyn@intel.com>
         * IB: port upstream csum_ok change
 2013-02-07 Mike Marciniszyn <mike.marciniszyn@intel.com>
