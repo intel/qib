@@ -1,0 +1,60 @@
+Bottom: 8b2f68e12128d7bf4c1bf4421c4368518fae8666
+Top:    18d793aaad8bae8bf77c891669d0e93b8c35dda3
+Author: Mike Marciniszyn <mike.marciniszyn@intel.com>
+Date:   2013-10-01 14:14:02 -0400
+
+Refresh of qib_legal_info.patch
+
+---
+
+diff --git a/ChangeLog b/ChangeLog
+index 2e16d62..effa896 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -1,3 +1,5 @@
++2013-10-01 Mike Marciniszyn <mike.marciniszyn@intel.com>
++	* Add licensing info
+ 2013-02-08 Mike Marciniszyn <mike.marciniszyn@intel.com>
+         * IB: port upstream csum_ok change
+ 2013-02-07 Mike Marciniszyn <mike.marciniszyn@intel.com>
+diff --git a/META b/META
+index ac545b3..07cfc7b 100644
+--- a/META
++++ b/META
+@@ -1,5 +1,5 @@
+ Meta:         1
+ Name:         qib
+ Version:      1.5.3
+-Release:      15
++Release:      16
+ Release-Tags: relext
+diff --git a/qib.spec b/qib.spec
+index f4b36dc..efd0b71 100644
+--- a/qib.spec
++++ b/qib.spec
+@@ -3,8 +3,8 @@
+ %define kver %{require_kver}
+ BuildRequires: kernel-devel = %{kver}
+ %else
+-%define kdir %((echo X; ls -1d /usr/src/kernels/*)|tail -1)
+-%define kver %(basename %{kdir})
++%define kver %(uname -r)
++%define kdir /usr/src/kernels/%{kver}
+ BuildRequires: kernel-devel
+ %endif
+ %if 0%{!?build_src_rpm:1}
+diff --git a/qib.spec.in b/qib.spec.in
+index 852ca72..49a6d46 100644
+--- a/qib.spec.in
++++ b/qib.spec.in
+@@ -3,8 +3,8 @@
+ %define kver %{require_kver}
+ BuildRequires: kernel-devel = %{kver}
+ %else
+-%define kdir %((echo X; ls -1d /usr/src/kernels/*)|tail -1)
+-%define kver %(basename %{kdir})
++%define kver %(uname -r)
++%define kdir /usr/src/kernels/%{kver}
+ BuildRequires: kernel-devel
+ %endif
+ %if 0%{!?build_src_rpm:1}
