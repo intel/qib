@@ -252,11 +252,6 @@ pgprot_t pgprot_writecombine(pgprot_t _prot)
 		pgprot_noncached(_prot);
 }
 
-void __iomem *ioremap_wc(unsigned long phys_addr, unsigned long size)
-{
-	return __ioremap(phys_addr, size, QIB_WC_FLAGS);
-}
-
 int qib_wc_pat_enabled(void)
 {
 	return wc_enabled;
@@ -270,11 +265,6 @@ void qib_disable_wc_pat(void){}
 pgprot_t pgprot_writecombine(pgprot_t _prot)
 {
 	return pgprot_noncached(_prot);
-}
-
-void __iomem *ioremap_wc(unsigned long phys_addr, unsigned long size)
-{
-	return ioremap_nocache(phys_addr, size);
 }
 
 int qib_wc_pat_enabled(void)

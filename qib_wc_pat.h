@@ -51,6 +51,5 @@ int qib_enable_wc_pat(void);
 void qib_disable_wc_pat(void);
 int qib_wc_pat_enabled(void);
 pgprot_t pgprot_writecombine(pgprot_t _prot);
-void __iomem *ioremap_wc(unsigned long phys_addr, unsigned long size);
 
 #endif
