@@ -1786,7 +1786,9 @@ static int qib_query_port(struct ib_device *ibdev, u8 port,
 	props->max_vl_num = qib_num_vls(ppd->vls_supported);
 	props->init_type_reply = 0;
 
-	props->max_mtu = qib_ibmtu ? qib_ibmtu : IB_MTU_4096;
+	props->max_mtu = ib_mtu_enum_to_int(
+		QIB_MODPARAM_GET(ibmtu, dd->unit, ppd->port)) != -1 ?
+		QIB_MODPARAM_GET(ibmtu, dd->unit, ppd->port) : IB_MTU_4096;
 	switch (ppd->ibmtu) {
 	case 4096:
 		mtu = IB_MTU_4096;

@@ -104,9 +104,8 @@ MODULE_PARM_DESC(sdma_idle_cnt, "sdma interrupt idle delay (default 64)");
  * Number of VLs we are configured to use (to allow for more
  * credits per vl, etc.)
  */
-ushort qib_num_cfg_vls = 2;
-module_param_named(num_vls, qib_num_cfg_vls, ushort, S_IRUGO);
-MODULE_PARM_DESC(num_vls, "Set number of Virtual Lanes to use (1-8)");
+static QIB_MODPARAM_PORT(num_vls, NULL, 2, S_IRUGO,
+			 "Set number of Virtual Lanes to use (1-8)");
 
 static ushort qib_chase = 1;
 module_param_named(chase, qib_chase, ushort, S_IRUGO);
@@ -117,9 +116,8 @@ module_param_named(long_attenuation, qib_long_atten, ushort, S_IRUGO);
 MODULE_PARM_DESC(long_attenuation, \
 		 "attenuation cutoff (dB) for long copper cable setup");
 
-ushort qib_singleport;
-module_param_named(singleport, qib_singleport, ushort, S_IRUGO);
-MODULE_PARM_DESC(singleport, "Use only IB port 1; more per-port buffer space");
+static QIB_MODPARAM_UNIT(singleport, NULL, 0, S_IRUGO,
+			 "Use only IB port 1; more per-port buffer space");
 
 static ushort qib_krcvq01_no_msi;
 module_param_named(krcvq01_no_msi, qib_krcvq01_no_msi, ushort, S_IRUGO);
@@ -2354,7 +2352,8 @@ static void set_vls(struct qib_pportdata *ppd)
 	u64 val;
 
 	numvls = qib_num_vls(ppd->vls_operational);
-	qib_cdbg(INIT, "Using %d VLs (+VL15)\n", numvls);
+	qib_cdbg(INIT, "IB%u:%u Using %d VLs (+VL15)\n", ppd->dd->unit,
+		 ppd->port, numvls);
 
 	/*
 	 * Set up per-VL credits. Below is kluge based on these assumptions:
@@ -3659,7 +3658,8 @@ static unsigned qib_7322_boardname(struct qib_devdata *dd)
 		 dd->majrev, dd->minrev,
 		 (unsigned)SYM_FIELD(dd->revision, Revision_R, SW));
 
-	if (qib_singleport && (features >> PORT_SPD_CAP_SHIFT) & PORT_SPD_CAP) {
+	if (QIB_MODPARAM_GET(singleport, dd->unit, 0) &&
+	    (features >> PORT_SPD_CAP_SHIFT) & PORT_SPD_CAP) {
 		qib_devinfo(dd->pcidev, "IB%u: Forced to single port mode"
 			    " by module parameter\n", dd->unit);
 		features &= PORT_SPD_CAP;
@@ -3955,12 +3955,14 @@ static void qib_7322_config_ctxts(struct qib_devdata *dd)
 {
 	unsigned long flags;
 	u32 nchipctxts;
+	u32 cfgctxts = QIB_MODPARAM_GET(cfgctxts, dd->unit, 0);
+	u32 nkrcvqs = QIB_MODPARAM_GET(krcvqs, dd->unit, 0);
 
 	nchipctxts = qib_read_kreg32(dd, kr_contextcnt);
 	dd->cspec->numctxts = nchipctxts;
-	if (qib_n_krcv_queues > 1 && dd->num_pports) {
+	if (nkrcvqs > 1 && dd->num_pports) {
 		dd->first_user_ctxt = NUM_IB_PORTS +
-			(qib_n_krcv_queues - 1) * dd->num_pports;
+			(nkrcvqs - 1) * dd->num_pports;
 		if (dd->first_user_ctxt > nchipctxts)
 			dd->first_user_ctxt = nchipctxts;
 		dd->n_krcv_queues = dd->first_user_ctxt / dd->num_pports;
@@ -3969,7 +3971,7 @@ static void qib_7322_config_ctxts(struct qib_devdata *dd)
 		dd->n_krcv_queues = 1;
 	}
 
-	if (!qib_cfgctxts) {
+	if (!cfgctxts) {
 		int nctxts = dd->first_user_ctxt + num_online_cpus();
 
 		if (nctxts <= 6)
@@ -3982,10 +3984,10 @@ static void qib_7322_config_ctxts(struct qib_devdata *dd)
 			qib_dbg("Auto-configured for %u ctxts, %d cpus "
 				"online\n", dd->ctxtcnt,
 				num_online_cpus());
-	} else if (qib_cfgctxts < dd->num_pports)
+	} else if (cfgctxts < dd->num_pports)
 		dd->ctxtcnt = dd->num_pports;
-	else if (qib_cfgctxts <= nchipctxts)
-		dd->ctxtcnt = qib_cfgctxts;
+	else if (cfgctxts <= nchipctxts)
+		dd->ctxtcnt = cfgctxts;
 	if (!dd->ctxtcnt) /* none of the above, set to max */
 		dd->ctxtcnt = nchipctxts;
 
@@ -5886,7 +5888,6 @@ static void get_7322_chip_params(struct qib_devdata *dd)
 {
 	u64 val;
 	u32 piobufs;
-	int mtu;
 
 	dd->palign = qib_read_kreg32(dd, kr_pagealign);
 
@@ -5905,11 +5906,10 @@ static void get_7322_chip_params(struct qib_devdata *dd)
 	dd->piosize2k = val & ~0U;
 	dd->piosize4k = val >> 32;
 
-	mtu = ib_mtu_enum_to_int(qib_ibmtu);
-	if (mtu == -1)
-		mtu = QIB_DEFAULT_MTU;
-	dd->pport[0].ibmtu = (u32)mtu;
-	dd->pport[1].ibmtu = (u32)mtu;
+	val = ib_mtu_enum_to_int(QIB_MODPARAM_GET(ibmtu, dd->unit, 1));
+	dd->pport[0].ibmtu = val == -1 ? QIB_DEFAULT_MTU : val;
+	val = ib_mtu_enum_to_int(QIB_MODPARAM_GET(ibmtu, dd->unit, 2));
+	dd->pport[1].ibmtu = val == -1 ? QIB_DEFAULT_MTU : val;
 
 	/* these may be adjusted in init_chip_wc_pat() */
 	dd->pio2kbase = (u32 __iomem *)
@@ -6557,7 +6557,7 @@ static int qib_init_7322_variables(struct qib_devdata *dd)
 {
 	struct qib_pportdata *ppd;
 	unsigned features, pidx, sbufcnt;
-	int ret, mtu;
+	int ret, maxmtu = 0;
 	u32 sbufs, updthresh;
 
 	/* pport structs are contiguous, allocated after devdata */
@@ -6636,10 +6636,6 @@ static int qib_init_7322_variables(struct qib_devdata *dd)
 	 */
 	qib_7322_set_baseaddrs(dd);
 
-	mtu = ib_mtu_enum_to_int(qib_ibmtu);
-	if (mtu == -1)
-		mtu = QIB_DEFAULT_MTU;
-
 	dd->cspec->int_enable_mask = QIB_I_BITSEXTANT;
 	/* all hwerrors become interrupts, unless special purposed */
 	dd->cspec->hwerrmask = ~0ULL;
@@ -6649,9 +6645,14 @@ static int qib_init_7322_variables(struct qib_devdata *dd)
 		~(SYM_MASK(HwErrMask, IBSerdesPClkNotDetectMask_0) |
 		  SYM_MASK(HwErrMask, IBSerdesPClkNotDetectMask_1) |
 		  HWE_MASK(LATriggered));
-
 	for (pidx = 0; pidx < NUM_IB_PORTS; ++pidx) {
 		struct qib_chippport_specific *cp = ppd->cpspec;
+		int mtu = ib_mtu_enum_to_int(
+			QIB_MODPARAM_GET(ibmtu, dd->unit, pidx+1));
+		u8 vls = QIB_MODPARAM_GET(num_vls, dd->unit, pidx+1);
+		if (mtu == -1)
+			mtu = QIB_DEFAULT_MTU;
+		maxmtu = max(maxmtu, mtu);
 		ppd->link_speed_supported = features & PORT_SPD_CAP;
 		features >>=  PORT_SPD_CAP_SHIFT;
 		if (!ppd->link_speed_supported) {
@@ -6705,7 +6706,7 @@ static int qib_init_7322_variables(struct qib_devdata *dd)
 		ppd->link_width_active = IB_WIDTH_4X;
 		ppd->link_speed_active = QIB_IB_SDR;
 		ppd->delay_mult = ib_rate_to_delay[IB_RATE_10_GBPS];
-		switch (qib_num_cfg_vls) {
+		switch (vls) {
 		case 1:
 			ppd->vls_supported = IB_VL_VL0;
 			break;
@@ -6715,8 +6716,7 @@ static int qib_init_7322_variables(struct qib_devdata *dd)
 		default:
 			qib_devinfo(dd->pcidev,
 				    "Invalid num_vls %u, using 4 VLs\n",
-				    qib_num_cfg_vls);
-			qib_num_cfg_vls = 4;
+				    vls);
 			/* fall through */
 		case 4:
 			ppd->vls_supported = IB_VL_VL0_3;
@@ -6728,9 +6728,8 @@ static int qib_init_7322_variables(struct qib_devdata *dd)
 				qib_devinfo(dd->pcidev,
 					    "Invalid num_vls %u for MTU %d "
 					    ", using 4 VLs\n",
-					    qib_num_cfg_vls, mtu);
+					    vls, mtu);
 				ppd->vls_supported = IB_VL_VL0_3;
-				qib_num_cfg_vls = 4;
 			}
 			break;
 		}
@@ -6782,7 +6781,7 @@ static int qib_init_7322_variables(struct qib_devdata *dd)
 	dd->rhf_offset = dd->rcvhdrentsize - sizeof(u64) / sizeof(u32);
 
 	/* we always allocate at least 2048 bytes for eager buffers */
-	dd->rcvegrbufsize = max(mtu, 2048);
+	dd->rcvegrbufsize = max(maxmtu, 2048);
 	BUG_ON(!is_power_of_2(dd->rcvegrbufsize));
 	dd->rcvegrbufsize_shift = ilog2(dd->rcvegrbufsize);
 
