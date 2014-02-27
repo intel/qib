@@ -1404,6 +1404,8 @@ static void cleanup_device_data(struct qib_devdata *dd)
 		tmpp = dd->pageshadow;
 		dd->pageshadow = NULL;
 		vfree(tmpp);
+		dd->physshadow = NULL;
+		vfree(tmpd);
 	}
 
 	/*
