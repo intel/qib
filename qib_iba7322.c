@@ -3199,9 +3199,8 @@ static irqreturn_t qib_7322intr(int irq, void *data)
 		for (i = 0; i < dd->first_user_ctxt; i++) {
 			if (ctxtrbits & rmask) {
 				ctxtrbits &= ~rmask;
-				if (dd->rcd[i]) {
+				if (dd->rcd[i])
 					qib_kreceive(dd->rcd[i], NULL, &npkts);
-				}
 			}
 			rmask <<= 1;
 		}
@@ -6331,7 +6330,7 @@ static void set_no_qsfp_atten(struct qib_devdata *dd, int change)
 				continue;
 			ppd->cpspec->no_eep = val;
 			if (seth1)
-				 ppd->cpspec->h1_val = h1;
+				ppd->cpspec->h1_val = h1;
 			/* now change the IBC and serdes, overriding generic */
 			init_txdds_table(ppd, 1);
 			/* Re-enable the physical state machine on mezz boards
@@ -6789,7 +6788,7 @@ static int qib_init_7322_variables(struct qib_devdata *dd)
 		 */
 		if (!(ppd->dd->flags & QIB_HAS_QSFP)) {
 			if (!IS_QMH(ppd->dd) && !IS_QME(ppd->dd))
-				 qib_devinfo(ppd->dd->pcidev, "IB%u:%u: "
+				qib_devinfo(ppd->dd->pcidev, "IB%u:%u: "
 					     "Unknown mezzanine card type\n",
 					     ppd->dd->unit, ppd->port);
 			cp->h1_val = IS_QMH(ppd->dd) ? H1_FORCE_QMH :
@@ -8140,7 +8139,7 @@ static int serdes_7322_init(struct qib_pportdata *ppd)
 static int serdes_7322_init_old(struct qib_pportdata *ppd)
 {
 	u32 le_val;
-	
+
 	/*
 	 * Initialize the Tx DDS tables.  Also done every QSFP event,
 	 * for adapters with QSFP

@@ -204,7 +204,7 @@ int qib_lkey_ok(struct qib_lkey_table *rkt, struct qib_pd *pd,
 		would have executed.
 		*/
 		size_t entries_spanned_by_off;
-		
+
 		entries_spanned_by_off = off >> mr->page_shift;
 		off -= (entries_spanned_by_off << mr->page_shift);
 		m = entries_spanned_by_off/QIB_SEGSZ;
@@ -303,7 +303,7 @@ int qib_rkey_ok(struct qib_qp *qp, struct qib_sge *sge,
 		would have executed.
 		*/
 		size_t entries_spanned_by_off;
-		
+
 		entries_spanned_by_off = off >> mr->page_shift;
 		off -= (entries_spanned_by_off << mr->page_shift);
 		m = entries_spanned_by_off/QIB_SEGSZ;
