@@ -96,8 +96,6 @@ unsigned qib_wc_pat = 2;
 module_param_named(wc_pat, qib_wc_pat, uint, S_IRUGO);
 MODULE_PARM_DESC(wc_pat, "Enable write-combining (0=via MTRR, 1=via PAT, 2=Force via PAT (default))");
 
-struct workqueue_struct *qib_cq_wq;
-
 static void verify_interrupt(unsigned long);
 
 static struct idr qib_unit_table;
@@ -493,6 +491,7 @@ static int loadtime_init(struct qib_devdata *dd)
 	dd->intrchk_timer.function = verify_interrupt;
 	dd->intrchk_timer.data = (unsigned long) dd;
 
+	ret = qib_cq_init(dd);
 done:
 	return ret;
 }
@@ -1267,12 +1266,6 @@ static int __init qlogic_ib_init(void)
 	if (ret)
 		goto bail_dev;
 
-	qib_cq_wq = create_singlethread_workqueue("qib_cq");
-	if (!qib_cq_wq) {
-		ret = -ENOMEM;
-		goto bail_trace;
-	}
-
 	if (qib_numa_aware == QIB_DRIVER_AUTO_CONFIGURATION)
 		qib_numa_aware = qib_configure_numa(boot_cpu_data) ? 1 : 0;
 
@@ -1290,7 +1283,7 @@ static int __init qlogic_ib_init(void)
 	if (!idr_pre_get(&qib_unit_table, GFP_KERNEL)) {
 		printk(KERN_ERR QIB_DRV_NAME ": idr_pre_get() failed\n");
 		ret = -ENOMEM;
-		goto bail_cq_wq;
+		goto bail_trace;
 	}
 
 	ret = pci_register_driver(&qib_driver);
@@ -1307,8 +1300,6 @@ static int __init qlogic_ib_init(void)
 
 bail_unit:
 	idr_destroy(&qib_unit_table);
-bail_cq_wq:
-	destroy_workqueue(qib_cq_wq);
 bail_trace:
 	qib_trace_fini();
 bail_dev:
@@ -1333,8 +1324,6 @@ static void __exit qlogic_ib_cleanup(void)
 			"error %d\n", -ret);
 
 	pci_unregister_driver(&qib_driver);
-
-	destroy_workqueue(qib_cq_wq);
 
 	qib_cpulist_count = 0;
 	kfree(qib_cpulist);
@@ -1435,6 +1424,7 @@ static void cleanup_device_data(struct qib_devdata *dd)
 	}
 	kfree(tmp);
 	kfree(dd->boardname);
+	qib_cq_uninit(dd);
 }
 
 /*

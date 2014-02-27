@@ -50,6 +50,7 @@
 #include <linux/completion.h>
 #include <linux/kref.h>
 #include <linux/sched.h>
+#include <linux/kthread.h>
 
 #include "qib_common.h"
 #include "qib_debug.h"
@@ -1096,6 +1097,8 @@ struct qib_devdata {
 	u16 psxmitwait_check_rate;
 	/* high volume overflow errors defered to tasklet */
 	struct tasklet_struct error_tasklet;
+	/* per device cq worker */
+	struct kthread_worker *worker;
 
 	int local_node_id; /* NUMA node closest to HCA */
 	s64 assigned_node_id; /* NUMA node assigned or determined by driver */

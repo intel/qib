@@ -38,7 +38,8 @@ ib_qib-y := \
 	qib_sd7220.o \
 	qib_sd7220_img.o \
 	qib_iba7322.o \
-	qib_verbs.o
+	qib_verbs.o \
+	backport_kthread.o
 
 #qib_wc_pat.o
 #backport_sysfs.o
