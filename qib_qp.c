@@ -121,6 +121,7 @@ static int alloc_qpn(struct qib_devdata *dd, struct qib_qpn_table *qpt,
 		     enum ib_qp_type type, u8 port)
 {
 	u32 i, offset, max_scan, qpn;
+	unsigned krcvqs;
 	struct qpn_map *map;
 	u32 ret;
 
@@ -138,10 +139,11 @@ static int alloc_qpn(struct qib_devdata *dd, struct qib_qpn_table *qpt,
 		goto bail;
 	}
 
+	krcvqs = dd->pport[port-1].n_krcv_queues;
 	qpn = qpt->last + 2;
 	if (qpn >= QPN_MAX)
 		qpn = 2;
-	if (qpt->mask && ((qpn & qpt->mask) >> 1) >= dd->n_krcv_queues)
+	if (qpt->mask && ((qpn & qpt->mask) >> 1) >= krcvqs)
 		qpn = (qpn | qpt->mask) + 2;
 	offset = qpn & BITS_PER_PAGE_MASK;
 	map = &qpt->map[qpn / BITS_PER_PAGE];
@@ -159,7 +161,7 @@ static int alloc_qpn(struct qib_devdata *dd, struct qib_qpn_table *qpt,
 				goto bail;
 			}
 			offset = find_next_offset(qpt, map, offset,
-				dd->n_krcv_queues);
+				krcvqs);
 			qpn = mk_qpn(qpt, map, offset);
 			/*
 			 * This test differs from alloc_pidmap().
