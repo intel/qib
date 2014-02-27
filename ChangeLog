@@ -1,5 +1,29 @@
+2014-02-15 Mike Marciniszyn <mike.marciniszyn@intel.com>
+        * Tag 1.5.3-17
+        * IB/qib: fix QP check when looping back to/from QP1
+        * IB/qib: Correct CPU0 sibling fallback for affinity hint
+        * IB/qib: remove ioremap_wc()
+        * IB/qib: Fix error return code in qib_init_7322_variables()
+        * IB/qib: Convert qib_user_sdma_pin_pages() to use get_user_pages_fast()
+        * IB/qib: Change SDMA progression mode depending on single- or mulit-rail.
+        * IB/qib: Fix module-level leak
+        * IB/qib: Unconditionally log SDMA errors
+        * IB/qib: use %u to print out unsigned stats
+        * IB/qib: Add tunings for new Dell backplane
+        * IB/qib: Branding changes to change Qlogic to Intel/Qib.
+        * IB/qib: This patch improves SDMA performance.
+        * IB/qib: optimize CQ callbacks
+        * IB/qib: Fix an incorrect log message
+        * IB/qib: Add dual rail NUMA awareness for PSM processes
+        * IB/qib: Remove unnecessary syslog entries from driver
+        * IB/qib: Fix message rate degradation on AMD Magny Cours & Interlagos
+        * IB/qib: Added congestion control agent implementation
+        * IB/qib: Convert krvqs module parameter to per-port
+        * IB/qib: Add support for per-device/per-port parameters
+        * IB/qib: Reduce sdma_lock contention
 2013-10-01 Mike Marciniszyn <mike.marciniszyn@intel.com>
-	* Add licensing info
+        * Tag 1.5.3-16
+        * Add licensing info
 2013-02-08 Mike Marciniszyn <mike.marciniszyn@intel.com>
         * IB: port upstream csum_ok change
 2013-02-07 Mike Marciniszyn <mike.marciniszyn@intel.com>
