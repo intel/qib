@@ -1363,6 +1363,76 @@ static unsigned int qib_poll(struct file *fp, struct poll_table_struct *pt)
 	return pollflag;
 }
 
+static void assign_ctxt_affinity(struct file *fp, struct qib_devdata *dd)
+{
+	struct qib_filedata *fd = fp->private_data;
+	const unsigned int weight = cpumask_weight(&current->cpus_allowed);
+	const struct cpumask *local_mask = cpumask_of_pcibus(dd->pcidev->bus);
+	int local_cpu;
+
+	/*
+	 * If process has NOT already set it's affinity, select and
+	 * reserve a processor for it on the local NUMA node.
+	 */
+	if ((weight >= qib_cpulist_count) &&
+		(cpumask_weight(local_mask) <= qib_cpulist_count)) {
+		for_each_cpu(local_cpu, local_mask)
+			if (!test_and_set_bit(local_cpu, qib_cpulist)) {
+				fd->rec_cpu_num = local_cpu;
+
+				qib_dev_trace(dd->pcidev, "%s PID %u CPU %u "\
+					"unit %u: assign cpu %d on local NUMA "\
+					"node %d\n", current->comm,
+					current->pid, get_cpu(), dd->unit,
+					fd->rec_cpu_num,
+					cpu_to_node(local_cpu));
+
+				return;
+			}
+	}
+
+	/*
+	 * If process has NOT already set it's affinity, select and
+	 * reserve a processor for it, as a rendevous for all
+	 * users of the driver.  If they don't actually later
+	 * set affinity to this cpu, or set it to some other cpu,
+	 * it just means that sooner or later we don't recommend
+	 * a cpu, and let the scheduler do it's best.
+	 */
+	if (weight >= qib_cpulist_count) {
+		int cpu;
+		cpu = find_first_zero_bit(qib_cpulist,
+					  qib_cpulist_count);
+		if (cpu == qib_cpulist_count)
+			qib_dev_err(dd, "no cpus avail for affinity " \
+				 "PID %u\n", current->pid);
+		else {
+			__set_bit(cpu, qib_cpulist);
+			fd->rec_cpu_num = cpu;
+			qib_dev_trace(dd->pcidev, "%s PID %u CPU %u " \
+				"unit %u: assign cpu %d on NUMA node " \
+				"%d\n", current->comm, current->pid,
+				get_cpu(), dd->unit, cpu,
+				cpu_to_node(cpu));
+		}
+	} else if (weight == 1 &&
+		test_bit(cpumask_first(&current->cpus_allowed),
+			   qib_cpulist))
+		qib_dev_trace(dd->pcidev, "%s PID %u CPU %u unit %u: "\
+			"affinity already set to cpu %d on NUMA "\
+			"node %d\n", current->comm, current->pid,
+			get_cpu(), dd->unit,
+			cpumask_first(&current->cpus_allowed),
+			cpu_to_node(cpumask_first(&current->cpus_allowed)));
+
+	else {
+		qib_dev_trace(dd->pcidev, "%s PID %u CPU %u unit %u: "\
+			"affinity already set for %d of %d cpus\n",
+			current->comm, current->pid, get_cpu(),
+			dd->unit, weight, qib_cpulist_count);
+	}
+}
+
 /*
  * Check that userland and driver are compatible for subcontexts.
  */
@@ -1467,19 +1537,25 @@ bail:
 static int setup_ctxt(struct qib_pportdata *ppd, int ctxt,
 		      struct file *fp, const struct qib_user_info *uinfo)
 {
+	struct qib_filedata *fd = fp->private_data;
 	struct qib_devdata *dd = ppd->dd;
 	struct qib_ctxtdata *rcd;
 	void *ptmp = NULL;
 	int ret;
 	int numa_id;
 
-	numa_id = qib_numa_aware ? numa_node_id() :
-		dd->assigned_node_id;
+	assign_ctxt_affinity(fp, dd);
+
+	numa_id = qib_numa_aware ? ((fd->rec_cpu_num != -1) ?
+		cpu_to_node(fd->rec_cpu_num) :
+		numa_node_id()) : dd->assigned_node_id;
 
 	rcd = qib_create_ctxtdata(ppd, ctxt, numa_id);
 
-	qib_dev_trace(dd->pcidev, "%s[%u] unit=%u CPU=%u NUMA id=%u\n",
-		rcd->comm, current->pid, dd->unit, get_cpu(), numa_id);
+	qib_dev_trace(dd->pcidev, "%s PID %u CPU %u unit %u: " \
+		"allocated context memory on NUMA node %d\n",
+		current->comm, current->pid, get_cpu(), dd->unit,
+		numa_id);
 
 	/*
 	 * Allocate memory for use in qib_tid_update() at open to
@@ -1514,6 +1590,9 @@ static int setup_ctxt(struct qib_pportdata *ppd, int ctxt,
 	goto bail;
 
 bailerr:
+	if (fd->rec_cpu_num != -1)
+		__clear_bit(fd->rec_cpu_num, qib_cpulist);
+
 	dd->rcd[ctxt] = NULL;
 	kfree(rcd);
 	kfree(ptmp);
@@ -1547,7 +1626,7 @@ static int choose_port_ctxt(struct file *fp, struct qib_devdata *dd, u32 port,
 			ppd = dd->pport + port - 1;
 	}
 	for (ctxt = dd->first_user_ctxt; ctxt < dd->cfgctxts && dd->rcd[ctxt];
-	     ctxt++)
+		ctxt++)
 		;
 	if (ctxt == dd->cfgctxts) {
 		ret = -EBUSY;
@@ -1722,6 +1801,66 @@ static int qib_open(struct inode *in, struct file *fp)
 	return fp->private_data ? 0 : -ENOMEM;
 }
 
+static int find_hca(unsigned int cpu, int *unit)
+{
+	int ret = 0, devmax, npresent, nup, ndev;
+
+	*unit = -1;
+
+	devmax = qib_count_units(&npresent, &nup);
+	if (!npresent) {
+		ret = -ENXIO;
+		qib_dbg("No boards found\n");
+		goto done;
+	}
+	if (!nup) {
+		ret = -ENETDOWN;
+		qib_dbg("No contexts available (none initialized " \
+			"and ACTIVE)\n");
+		goto done;
+	}
+	for (ndev = 0; ndev < devmax; ndev++) {
+		struct qib_devdata *dd = qib_lookup(ndev);
+		if (dd) {
+			if (pcibus_to_node(dd->pcidev->bus) < 0) {
+				qib_dbg("No NUMA node to HCA binding\n");
+				ret = -EINVAL;
+				goto done;
+			}
+			if (cpu_to_node(cpu) ==
+				pcibus_to_node(dd->pcidev->bus)) {
+				*unit = ndev;
+				goto done;
+			}
+		}
+	}
+done:
+	qib_dev_trace(dd->pcidev, "%s PID %u CPU %u unit %d: "\
+		"HCA close to cpu %u\n",
+		current->comm,
+		current->pid, get_cpu(), *unit, cpu);
+
+	return ret;
+}
+
+static int do_qib_user_sdma_queue_create(struct file *fp)
+{
+	struct qib_filedata *fd = fp->private_data;
+	struct qib_ctxtdata *rcd = fd->rcd;
+	struct qib_devdata *dd = rcd->dd;
+
+	if (dd->flags & QIB_HAS_SEND_DMA)
+
+		fd->pq = qib_user_sdma_queue_create(&dd->pcidev->dev,
+						    dd->unit,
+						    rcd->ctxt,
+						    fd->subctxt);
+		if (!fd->pq)
+			return -ENOMEM;
+
+	return 0;
+}
+
 /*
  * Get ctxt early, so can set affinity prior to memory allocation.
  */
@@ -1770,10 +1909,11 @@ static int qib_assign_ctxt(struct file *fp, const struct qib_user_info *uinfo)
 	if (qib_compatible_subctxts(swmajor, swminor) &&
 	    uinfo->spu_subctxt_cnt) {
 		ret = find_shared_ctxt(fp, uinfo);
-		if (ret) {
-			if (ret > 0)
-				ret = 0;
-			goto done_chk_sdma;
+		if (ret > 0) {
+			ret = do_qib_user_sdma_queue_create(fp);
+			if (!ret)
+				assign_ctxt_affinity(fp, (ctxt_fp(fp))->dd);
+			goto done_ok;
 		}
 	}
 
@@ -1783,66 +1923,28 @@ static int qib_assign_ctxt(struct file *fp, const struct qib_user_info *uinfo)
 
 	if (i_minor)
 		ret = find_free_ctxt(i_minor - 1, fp, uinfo);
-	else
+	else {
+		int unit;
+		const unsigned int cpu = cpumask_first(&current->cpus_allowed);
+		const unsigned int weight =
+			cpumask_weight(&current->cpus_allowed);
+
+		if (weight == 1 && !test_bit(cpu, qib_cpulist))
+			if (!find_hca(cpu, &unit) && unit >= 0)
+				if (!find_free_ctxt(unit, fp, uinfo)) {
+					ret = 0;
+					goto done_chk_sdma;
+				}
 		ret = get_a_ctxt(fp, uinfo, alg);
+	}
 
 done_chk_sdma:
-	if (!ret) {
-		struct qib_filedata *fd = fp->private_data;
-		struct qib_ctxtdata *rcd = fd->rcd;
-		struct qib_devdata *dd = rcd->dd;
-		unsigned int weight;
-
-		if (dd->flags & QIB_HAS_SEND_DMA) {
-			fd->pq = qib_user_sdma_queue_create(&dd->pcidev->dev,
-							    dd->unit,
-							    rcd->ctxt,
-							    fd->subctxt);
-			if (!fd->pq)
-				ret = -ENOMEM;
-		}
-
-		/*
-		 * If process has NOT already set it's affinity, select and
-		 * reserve a processor for it, as a rendevous for all
-		 * users of the driver.  If they don't actually later
-		 * set affinity to this cpu, or set it to some other cpu,
-		 * it just means that sooner or later we don't recommend
-		 * a cpu, and let the scheduler do it's best.
-		 */
-		weight = cpumask_weight(&current->cpus_allowed);
-		if (!ret && weight >= qib_cpulist_count) {
-			int cpu;
-			cpu = find_first_zero_bit(qib_cpulist,
-						  qib_cpulist_count);
-			if (cpu == qib_cpulist_count)
-				qib_cdbg(PROC, "no cpus avail for affinity "
-					 "PID %u\n", current->pid);
-			else {
-				__set_bit(cpu, qib_cpulist);
-				fd->rec_cpu_num = cpu;
-				qib_cdbg(PROC, "allocate cpu %d PID %u unit%u"
-					 " ctxt%u:%u\n",
-					 fd->rec_cpu_num,
-					 current->pid, rcd->dd->unit,
-					 rcd->ctxt, subctxt_fp(fp));
-			}
-		} else if (weight == 1 &&
-			test_bit(cpumask_first(&current->cpus_allowed),
-				   qib_cpulist))
-			qib_devinfo(dd->pcidev, "%s PID %u affinity "
-				    "set to cpu %d; already allocated\n",
-				    current->comm, current->pid,
-				    cpumask_first(&current->cpus_allowed));
-		else if (!ret)
-			qib_cdbg(PROC, "affinity set for %d cpus of %d, not "
-				 "allocating cpu\n",
-				 weight,
-				 qib_cpulist_count);
-	} else
+	if (!ret)
+		ret = do_qib_user_sdma_queue_create(fp);
+	else
 		qib_cdbg(PROC, "No contexts available (%u,%u): err %d\n",
 			i_minor, uinfo->spu_port, -ret);
-
+done_ok:
 	mutex_unlock(&qib_mutex);
 
 done:

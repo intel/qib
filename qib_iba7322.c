@@ -1596,8 +1596,9 @@ static void sdma_7322_p_errors(struct qib_pportdata *ppd, u64 errs)
 			    ppd->port);
 
 	spin_lock_irqsave(&ppd->sdma_lock, flags);
-	qib_cdbg(SDMA, "IB%u:%u %s 0x%016llx\n", dd->unit, ppd->port,
-		 qib_sdma_state_names[ppd->sdma_state.current_state], errs);
+	qib_cdbg(SDMA, "IB%u:%u %s 0x%016llx %s\n", dd->unit, ppd->port,
+		 qib_sdma_state_names[ppd->sdma_state.current_state],
+		 errs, ppd->cpspec->sdmamsgbuf);
 	dump_sdma_7322_state(ppd);
 
 	switch (ppd->sdma_state.current_state) {

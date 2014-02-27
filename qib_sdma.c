@@ -727,9 +727,12 @@ void dump_sdma_state(struct qib_pportdata *ppd)
 	cnt = qib_sdma_descq_freecnt(ppd);
 	descq = ppd->sdma_descq;
 
-	qib_cdbg(SDMA, "IB%u: ppd->sdma_descq_head: %u\n", ppd->port, head);
-	qib_cdbg(SDMA, "IB%u: ppd->sdma_descq_tail: %u\n", ppd->port, tail);
-	qib_cdbg(SDMA, "IB%u: sdma_descq_freecnt: %u\n", ppd->port, cnt);
+	qib_cdbg(SDMA, "IB%u:%u ppd->sdma_descq_head: %u\n",
+		 ppd->dd->unit, ppd->port, head);
+	qib_cdbg(SDMA, "IB%u:%u ppd->sdma_descq_tail: %u\n",
+		 ppd->dd->unit, ppd->port, tail);
+	qib_cdbg(SDMA, "IB%u:%u sdma_descq_freecnt: %u\n",
+		 ppd->dd->unit, ppd->port, cnt);
 
 	/* print info for each entry in the descriptor queue */
 	while (head != tail) {
@@ -747,8 +750,9 @@ void dump_sdma_state(struct qib_pportdata *ppd)
 		gen = (desc[0] >> 30) & 3ULL;
 		dwlen = (desc[0] >> 14) & (0x7ffULL << 2);
 		dwoffset = (desc[0] & 0x7ffULL) << 2;
-		qib_cdbg(SDMA, "IB%u: sdmadesc[%u]: flags:%s addr:0x%016llx "
-			 "gen:%u len:%u bytes offset:%u bytes\n", ppd->port,
+		qib_cdbg(SDMA, "IB%u:%u sdmadesc[%u]: flags:%s addr:0x%016llx "
+			 "gen:%u len:%u bytes offset:%u bytes\n",
+			 ppd->dd->unit, ppd->port,
 			 head, flags, addr, gen, dwlen, dwoffset);
 		if (++head == ppd->sdma_descq_cnt)
 			head = 0;
@@ -758,8 +762,9 @@ void dump_sdma_state(struct qib_pportdata *ppd)
 		/* print dma descriptor indices from the TX requests */
 		list_for_each_entry_safe(txp, txpnext, &ppd->sdma_activelist,
 					 list)
-			qib_cdbg(SDMA, "IB%u: txp->start_idx: %u "
-				"txp->next_descq_idx: %u\n", ppd->port,
+			qib_cdbg(SDMA, "IB%u:%u txp->start_idx: %u "
+				"txp->next_descq_idx: %u\n",
+				ppd->dd->unit, ppd->port,
 				txp->start_idx, txp->next_descq_idx);
 }
 
