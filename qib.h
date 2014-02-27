@@ -1639,6 +1639,11 @@ extern struct mutex qib_mutex;
 		dev_info(&(pcidev)->dev, fmt, ##__VA_ARGS__); \
 	} while (0)
 
+#define qib_dev_trace(pcidev, fmt, ...) \
+	do { \
+		qib_log(__QIB_INFO, "INFO: " fmt, ##__VA_ARGS__); \
+	} while (0)
+
 #if _QIB_DEBUGGING
 
 # define __QIB_DBG_WHICH(which, fmt, ...)                                   \

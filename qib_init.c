@@ -155,7 +155,7 @@ int qib_create_ctxts(struct qib_devdata *dd)
 	node_id = qib_numa_aware ? dd->local_node_id :
 		dd->assigned_node_id;
 
-	qib_devinfo(dd->pcidev, "Unit=%u CPU=%u Kernel Ctxt on NUMA id=%u\n",
+	qib_dev_trace(dd->pcidev, "Unit=%u CPU=%u Kernel Ctxt on NUMA id=%u\n",
 		dd->unit, get_cpu(), node_id);
 
 	/*
@@ -354,7 +354,7 @@ static int init_pioavailregs(struct qib_devdata *dd)
 	numa_id = qib_numa_aware ? dd->local_node_id :
 		dd->assigned_node_id;
 
-	qib_devinfo(dd->pcidev, "PIOavail reg area allocation: Unit=%u"
+	qib_dev_trace(dd->pcidev, "PIOavail reg area allocation: Unit=%u"
 		" CPU=%u NUMA id=%u\n", dd->unit, get_cpu(), numa_id);
 
 	original_node_id = dev_to_node(&dd->pcidev->dev);

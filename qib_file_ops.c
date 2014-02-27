@@ -1478,7 +1478,7 @@ static int setup_ctxt(struct qib_pportdata *ppd, int ctxt,
 
 	rcd = qib_create_ctxtdata(ppd, ctxt, numa_id);
 
-	qib_devinfo(dd->pcidev, "%s[%u] unit=%u CPU=%u NUMA id=%u\n",
+	qib_dev_trace(dd->pcidev, "%s[%u] unit=%u CPU=%u NUMA id=%u\n",
 		rcd->comm, current->pid, dd->unit, get_cpu(), numa_id);
 
 	/*
