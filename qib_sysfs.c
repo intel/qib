@@ -580,22 +580,22 @@ static ssize_t show_stats(struct device *device,
 
 		len += sprintf(buf + len,
 			       "Port %d:\n"
-			       "RC timeouts %d\n"
-			       "RC resends  %d\n"
-			       "RC QACKs    %d\n"
-			       "RC SEQ NAKs %d\n"
-			       "RC RDMA seq %d\n"
-			       "RC RNR NAKs %d\n"
-			       "RC OTH NAKs %d\n"
-			       "RC DComp    %d\n"
-			       "RCr dup req %d\n"
-			       "RCr SEQ NAK %d\n"
-			       "wait piobuf %d\n"
-			       "wait DMA    %d\n"
-			       "wait TX     %d\n"
-			       "unaligned   %d\n"
-			       "loop pkts   %d\n"
-			       "PKT drops   %d\n",
+			       "RC timeouts %u\n"
+			       "RC resends  %u\n"
+			       "RC QACKs    %u\n"
+			       "RC SEQ NAKs %u\n"
+			       "RC RDMA seq %u\n"
+			       "RC RNR NAKs %u\n"
+			       "RC OTH NAKs %u\n"
+			       "RC DComp    %u\n"
+			       "RCr dup req %u\n"
+			       "RCr SEQ NAK %u\n"
+			       "wait piobuf %u\n"
+			       "wait DMA    %u\n"
+			       "wait TX     %u\n"
+			       "unaligned   %u\n"
+			       "loop pkts   %u\n"
+			       "PKT drops   %u\n",
 			       dd->pport[pidx].port,
 			       ibp->n_rc_timeouts, ibp->n_rc_resends,
 			       ibp->n_rc_qacks, ibp->n_seq_naks,
