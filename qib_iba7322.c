@@ -6868,6 +6868,7 @@ static int qib_init_7322_variables(struct qib_devdata *dd)
 			 dd->piovl15base);
 		if (!dd->piovl15base) {
 			qib_dbg("Unable to remap vl15 buffers\n");
+			ret = -ENOMEM;
 			goto bail;
 		}
 		dd->sendbufavail0 = qib_read_kreg32(dd, kr_sendregbase) +
