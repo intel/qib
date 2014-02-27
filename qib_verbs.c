@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2013 Intel Corporation. All rights reserved.
  * Copyright (c) 2006, 2007, 2008, 2009, 2010 QLogic Corporation.
  * All rights reserved.
  * Copyright (c) 2005, 2006 PathScale, Inc. All rights reserved.
@@ -2359,7 +2360,7 @@ int qib_register_ib_device(struct qib_devdata *dd)
 	ibdev->dma_ops = &qib_dma_mapping_ops;
 
 	snprintf(ibdev->node_desc, sizeof(ibdev->node_desc),
-		 "QLogic Infiniband HCA");
+		 "Intel Infiniband HCA");
 
 	ret = ib_register_device(ibdev, qib_create_port_files);
 	if (ret)

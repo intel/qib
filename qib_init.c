@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2013 Intel Corporation. All rights reserved.
  * Copyright (c) 2006, 2007, 2008, 2009, 2010 QLogic Corporation.
  * All rights reserved.
  * Copyright (c) 2003, 2004, 2005, 2006 PathScale, Inc. All rights reserved.
@@ -1226,7 +1227,7 @@ static void __devexit qib_remove_one(struct pci_dev *);
 static int __devinit qib_init_one(struct pci_dev *,
 				  const struct pci_device_id *);
 
-#define DRIVER_LOAD_MSG "QLogic " QIB_DRV_NAME " loaded: "
+#define DRIVER_LOAD_MSG "Qib " QIB_DRV_NAME " loaded: "
 #define PFX QIB_DRV_NAME ": "
 
 static const struct pci_device_id qib_pci_tbl[] = {
@@ -1478,7 +1479,7 @@ static int __devinit qib_init_one(struct pci_dev *pdev,
 		break;
 
 	default:
-		qib_early_err(&pdev->dev, "Failing on unknown QLogic "
+		qib_early_err(&pdev->dev, "Failing on unknown Intel "
 			      "deviceid 0x%x\n", ent->device);
 		ret = -ENODEV;
 	}

@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2013 Intel Corporation. All rights reserved.
  * Copyright (c) 2006, 2007, 2008, 2009, 2010 QLogic Corporation.
  * All rights reserved.
  * Copyright (c) 2003, 2004, 2005, 2006 PathScale, Inc. All rights reserved.
@@ -3608,7 +3609,7 @@ struct qib_devdata *qib_init_iba6120_funcs(struct pci_dev *pdev,
 	int ret;
 
 #ifndef CONFIG_PCI_MSI
-	qib_early_err(&pdev->dev, "QLogic PCIE device 0x%x cannot "
+	qib_early_err(&pdev->dev, "Intel PCIE device 0x%x cannot "
 	      "work if CONFIG_PCI_MSI is not enabled\n",
 	      ent->device);
 	dd = ERR_PTR(-ENODEV);

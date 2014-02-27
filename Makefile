@@ -1,4 +1,4 @@
-EXTRA_CFLAGS += -DQIB_KERN_TYPE=1 -DQIB_IDSTR='"QLogic kernel.org driver $(RELEASE)"'
+EXTRA_CFLAGS += -DQIB_KERN_TYPE=1 -DQIB_IDSTR='"Intel kernel.org driver $(RELEASE)"'
 
 #obj-$(CONFIG_INFINIBAND_QIB) += ib_qib.o
 obj-m += ib_qib.o
