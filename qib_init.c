@@ -86,7 +86,6 @@ unsigned qib_wc_pat = 2;
 module_param_named(wc_pat, qib_wc_pat, uint, S_IRUGO);
 MODULE_PARM_DESC(wc_pat, "Enable write-combining (0=via MTRR, 1=via PAT, 2=Force via PAT (default))");
 
-struct workqueue_struct *qib_wq;
 struct workqueue_struct *qib_cq_wq;
 
 static void verify_interrupt(unsigned long);
@@ -232,6 +231,8 @@ void qib_init_pportdata(struct qib_pportdata *ppd, struct qib_devdata *dd,
 	init_timer(&ppd->symerr_clear_timer);
 	ppd->symerr_clear_timer.function = clear_symerror_on_linkup;
 	ppd->symerr_clear_timer.data = (unsigned long)ppd;
+
+	ppd->qib_wq = NULL;
 }
 
 static int init_pioavailregs(struct qib_devdata *dd)
@@ -521,6 +522,42 @@ static void init_piobuf_state(struct qib_devdata *dd)
 }
 
 /**
+ * qib_create_workqueues - create per port workqueues
+ * @dd: the qlogic_ib device
+ */
+static int qib_create_workqueues(struct qib_devdata *dd)
+{
+	int pidx;
+	struct qib_pportdata *ppd;
+
+	for (pidx = 0; pidx < dd->num_pports; ++pidx) {
+		ppd = dd->pport + pidx;
+		if (!ppd->qib_wq) {
+			char wq_name[8]; /* 3 + 2 + 1 + 1 + 1 */
+			snprintf(wq_name, sizeof(wq_name), "qib%d_%d",
+				dd->unit, pidx);
+			ppd->qib_wq =
+				create_singlethread_workqueue(wq_name);
+			if (!ppd->qib_wq)
+				goto wq_error;
+		}
+	}
+	return 0;
+wq_error:
+	printk(KERN_ERR QIB_DRV_NAME
+	     ": create_singlethread_workqueue failed for port %d\n",
+	     pidx + 1);
+	for (pidx = 0; pidx < dd->num_pports; ++pidx) {
+		ppd = dd->pport + pidx;
+		if (ppd->qib_wq) {
+			destroy_workqueue(ppd->qib_wq);
+			ppd->qib_wq = NULL;
+		}
+	}
+	return -ENOMEM;
+}
+
+/**
  * qib_init - do the actual initialization sequence on the chip
  * @dd: the qlogic_ib device
  * @reinit: reinitializing, so don't allocate new memory
@@ -806,6 +843,11 @@ static void qib_shutdown_device(struct qib_devdata *dd)
 		 * We can't count on interrupts since we are stopping.
 		 */
 		dd->f_quiet_serdes(ppd);
+
+		if (ppd->qib_wq) {
+			destroy_workqueue(ppd->qib_wq);
+			ppd->qib_wq = NULL;
+		}
 	}
 
 	qib_cdbg(VERBOSE, "Flush time and errors to EEPROM\n");
@@ -1106,24 +1148,10 @@ static int __init qlogic_ib_init(void)
 	if (ret)
 		goto bail_dev;
 
-	/*
-	 * We create our own workqueue mainly because we want to be
-	 * able to flush it when devices are being removed.  We can't
-	 * use schedule_work()/flush_scheduled_work() because both
-	 * unregister_netdev() and linkwatch_event take the rtnl lock,
-	 * so flush_scheduled_work() can deadlock during device
-	 * removal.
-	 */
-	qib_wq = create_workqueue("qib");
-	if (!qib_wq) {
-		ret = -ENOMEM;
-		goto bail_trace;
-	}
-
 	qib_cq_wq = create_singlethread_workqueue("qib_cq");
 	if (!qib_cq_wq) {
 		ret = -ENOMEM;
-		goto bail_wq;
+		goto bail_trace;
 	}
 
 	if (qib_numa_aware == QIB_DRIVER_AUTO_CONFIGURATION)
@@ -1162,8 +1190,6 @@ bail_unit:
 	idr_destroy(&qib_unit_table);
 bail_cq_wq:
 	destroy_workqueue(qib_cq_wq);
-bail_wq:
-	destroy_workqueue(qib_wq);
 bail_trace:
 	qib_trace_fini();
 bail_dev:
@@ -1189,7 +1215,6 @@ static void __exit qlogic_ib_cleanup(void)
 
 	pci_unregister_driver(&qib_driver);
 
-	destroy_workqueue(qib_wq);
 	destroy_workqueue(qib_cq_wq);
 
 	qib_cpulist_count = 0;
@@ -1338,6 +1363,10 @@ static int __devinit qib_init_one(struct pci_dev *pdev,
 		ret = PTR_ERR(dd);
 	if (ret)
 		goto bail; /* error already printed */
+
+	ret = qib_create_workqueues(dd);
+	if (ret)
+		goto bail;
 
 	/* do the generic initialization */
 	initfail = qib_init(dd, 0);

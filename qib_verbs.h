@@ -727,6 +727,7 @@ struct qib_ibport {
 	struct qib_opcode_stats opstats[128];
 };
 
+
 struct qib_ibdev {
 	struct ib_device ibdev;
 	struct list_head pending_mmaps;
@@ -831,17 +832,9 @@ static inline int qib_send_ok(struct qib_qp *qp)
 		 !(qp->s_flags & QIB_S_ANY_WAIT_SEND));
 }
 
-extern struct workqueue_struct *qib_wq;
 extern struct workqueue_struct *qib_cq_wq;
 
-/*
- * This must be called with s_lock held.
- */
-static inline void qib_schedule_send(struct qib_qp *qp)
-{
-	if (qib_send_ok(qp))
-		queue_work(qib_wq, &qp->s_work);
-}
+void qib_schedule_send(struct qib_qp *qp);
 
 static inline int qib_pkey_ok(u16 pkey1, u16 pkey2)
 {

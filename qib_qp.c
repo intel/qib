@@ -1195,7 +1195,6 @@ int qib_destroy_qp(struct ib_qp *ibqp)
 		qp->s_flags &= ~(QIB_S_TIMER | QIB_S_ANY_WAIT);
 		spin_unlock_irq(&qp->s_lock);
 		cancel_work_sync(&qp->s_work);
-		flush_workqueue(qib_wq);
 		del_timer_sync(&qp->s_timer);
 		wait_event(qp->wait_dma, !atomic_read(&qp->s_dma_busy));
 		if (qp->s_tx) {
