@@ -52,6 +52,13 @@
 #define QLOGIC_IB_R_EMULATOR_MASK (1ULL<<62)
 
 /*
+ * Select the NUMA node id on which to allocate the receive header
+ * queue, eager buffers and send pioavail register.
+ */
+QIB_MODPARAM_UNIT(numa_node, NULL, 0xFFFFFFFF, S_IRUGO,
+		"NUMA node on which memory is allocated");
+
+/*
  * Number of ctxts we are configured to use (to allow for more pio
  * buffers per ctxt, etc.)  Zero means use chip value.
  */
@@ -129,6 +136,27 @@ int qib_create_ctxts(struct qib_devdata *dd)
 	unsigned i, c, p;
 	unsigned port;
 	int ret;
+	int node_id;
+	int local_node_id = pcibus_to_node(dd->pcidev->bus);
+	s64 new_node_id = QIB_MODPARAM_GET(numa_node, dd->unit, 0);
+
+	if (local_node_id < 0)
+		local_node_id = numa_node_id();
+
+	if (new_node_id < 0)
+		new_node_id = local_node_id;
+
+	new_node_id = node_online(new_node_id) ? new_node_id :
+		local_node_id;
+
+	dd->local_node_id = local_node_id;
+	dd->assigned_node_id = new_node_id;
+
+	node_id = qib_numa_aware ? dd->local_node_id :
+		dd->assigned_node_id;
+
+	qib_devinfo(dd->pcidev, "Unit=%u CPU=%u Kernel Ctxt on NUMA id=%u\n",
+		dd->unit, get_cpu(), node_id);
 
 	/*
 	 * Allocate full ctxtcnt array, rather than just cfgctxts, because
@@ -155,7 +183,6 @@ int qib_create_ctxts(struct qib_devdata *dd)
 	for (port = 0, i = 0; i < dd->first_user_ctxt; ++i) {
 		struct qib_pportdata *ppd;
 		struct qib_ctxtdata *rcd;
-		int node_id;
 
 		if (dd->skip_kctxt_mask & (1 << i))
 			continue;
@@ -165,12 +192,6 @@ int qib_create_ctxts(struct qib_devdata *dd)
 		else
 			ppd = dd->pport + p;
 
-		if (qib_numa_aware) {
-			node_id = pcibus_to_node(dd->pcidev->bus);
-			if (node_id == -1)
-				node_id = numa_node_id();
-		} else
-			node_id = numa_node_id();
 		rcd = qib_create_ctxtdata(ppd, i, node_id);
 		if (!rcd) {
 			qib_dev_err(dd, "Unable to allocate ctxtdata"
@@ -327,10 +348,21 @@ static int init_pioavailregs(struct qib_devdata *dd)
 {
 	int ret, pidx;
 	u64 *status_page;
+	int numa_id;
+	int original_node_id;
 
+	numa_id = qib_numa_aware ? dd->local_node_id :
+		dd->assigned_node_id;
+
+	qib_devinfo(dd->pcidev, "PIOavail reg area allocation: Unit=%u"
+		" CPU=%u NUMA id=%u\n", dd->unit, get_cpu(), numa_id);
+
+	original_node_id = dev_to_node(&dd->pcidev->dev);
+	set_dev_node(&dd->pcidev->dev, numa_id);
 	dd->pioavailregs_dma = dma_alloc_coherent(
 		&dd->pcidev->dev, PAGE_SIZE, &dd->pioavailregs_phys,
 		GFP_KERNEL);
+	set_dev_node(&dd->pcidev->dev, original_node_id);
 	if (!dd->pioavailregs_dma) {
 		qib_dev_err(dd, "failed to allocate PIOavail reg area "
 			    "in memory\n");

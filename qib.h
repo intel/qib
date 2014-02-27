@@ -1096,6 +1096,9 @@ struct qib_devdata {
 	u16 psxmitwait_check_rate;
 	/* high volume overflow errors defered to tasklet */
 	struct tasklet_struct error_tasklet;
+
+	int local_node_id; /* NUMA node closest to HCA */
+	s64 assigned_node_id; /* NUMA node assigned or determined by driver */
 };
 
 enum qib_mod_param_t {
@@ -1577,6 +1580,7 @@ extern unsigned qib_compat_ddr_negotiate;
 extern int qib_special_trigger;
 extern unsigned qib_pio_avail_bits;
 extern unsigned qib_rcvhdrpoll;
+extern unsigned qib_numa_aware;
 
 extern struct mutex qib_mutex;
 
