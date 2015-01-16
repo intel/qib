@@ -1,4 +1,8 @@
-2014-02-15 Mike Marciniszyn <mike.marciniszyn@intel.com>
+2015-01-15 Mike Marciniszyn <mike.marciniszyn@intel.com>
+        * Tag 1.5.3-18
+        * IB/qib: Do not write EEPROM
+        * IB/qib: Add support for the new QMH7360 card
+2014-02-14 Mike Marciniszyn <mike.marciniszyn@intel.com>
         * Tag 1.5.3-17
         * IB/qib: fix QP check when looping back to/from QP1
         * IB/qib: Correct CPU0 sibling fallback for affinity hint
